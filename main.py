@@ -1,7 +1,5 @@
-import pandas as pd
 import streamlit as st
 from src import user_authentication as user_auth
-from src import streamlit_utils as st_utils
 from src import scatter_plot_dashboard
 
 st.set_page_config(page_title='SkillCorner Scatter Plot Dashboard',

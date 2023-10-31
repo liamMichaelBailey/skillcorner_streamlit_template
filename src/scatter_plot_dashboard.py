@@ -4,7 +4,6 @@ Liam Bailey
 Main page for skillcorner plot builder.
 This page should allow for the building of simple standard skillcorner plots.
 """
-import pandas as pd
 from src import streamlit_utils as st_utils
 import streamlit as st
 from src import streamlit_utils as streamlit_utils
