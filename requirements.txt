@@ -4,7 +4,4 @@ pandas==1.4.1
 requests==2.27.1
 skillcorner
 streamlit
-aiohttp
-adjustText
-streamlit_image_select
 git+https://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@github.com/liamMichaelBailey/skillcorner_data_analysis.git
