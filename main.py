@@ -25,7 +25,7 @@ st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 st.sidebar.divider()
 
-st.title("SkillCorner Scatter Plot Dashboard")
+st.title("SkillCorner Visualisation Dashboard")
 
 st.markdown(
     """
