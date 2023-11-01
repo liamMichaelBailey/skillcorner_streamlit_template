@@ -196,7 +196,7 @@ def main(seasons, competitions):
             if show_regression_line:
                 edited_df = edited_df[(~edited_df[x_value].isna()) & (~edited_df[y_value].isna())]
 
-            if st.button('📊 Plot data'):
+            if st.button('📊 Plot scatter plot'):
                 with st.spinner('Plotting data...'):
                     fig, ax = scatter.plot_scatter(df=edited_df,
                                                    x_metric=x_value,
@@ -285,7 +285,7 @@ def main(seasons, competitions):
             data_points = st.multiselect('Data points', edited_df['data_point_id'])
 
 
-            if st.button('📊 Plot bar chart'):
+            if st.button('📊 Plot table'):
                 with st.spinner('Plotting data...'):
                     fig, ax = table.plot_summary_table_rev(df=edited_df,
                                                            metrics=metrics,
