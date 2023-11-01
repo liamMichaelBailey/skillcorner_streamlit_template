@@ -4,4 +4,5 @@ requests==2.27.1
 skillcorner
 streamlit
 streamlit_image_select
+streamlit_option_menu
 git+https://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@github.com/liamMichaelBailey/skillcorner_data_analysis.git
