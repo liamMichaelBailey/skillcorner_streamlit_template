@@ -12,7 +12,8 @@ from skillcorner_analysis_lib.src.utils import skillcorner_physical_utils as scp
 from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils
 from skillcorner_analysis_lib.src.request_handlers.game_intelligence_requests import GameIntelligenceRequests
 from skillcorner_analysis_lib.src.request_handlers.physical_requests import PhysicalRequests
-from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, bar_plot as bar
+from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter,\
+    bar_plot as bar, summary_table as table
 from streamlit_option_menu import option_menu
 
 
@@ -273,6 +274,33 @@ def main(seasons, competitions):
                                 format='png',
                                 dpi=300,
                                 bbox_inches='tight')
+
+        if chart_type == 'Table':
+            st.write('Metrics:')
+            metrics = st.multiselect('Metrics', st.session_state.metrics)
+            labels = st.data_editor([m.replace('_', ' ').title() for m in metrics])
+
+            st.divider()
+            st.write('Data points to include:')
+            data_points = st.multiselect('Data points', edited_df['data_point_id'])
+
+
+            if st.button('📊 Plot bar chart'):
+                with st.spinner('Plotting data...'):
+                    fig, ax = table.plot_summary_table_rev(df=edited_df,
+                                                           metrics=metrics,
+                                                           metric_col_names=labels,
+                                                           players=data_points,
+                                                           data_point_label='player_name',
+                                                           data_point_id='data_point_id')
+
+                    st.pyplot(fig)
+
+                    fig.savefig('output/plot.png',
+                                format='png',
+                                dpi=300,
+                                bbox_inches='tight')
+
 
         with open("output/plot_data.csv", "rb") as file:
             st.download_button(

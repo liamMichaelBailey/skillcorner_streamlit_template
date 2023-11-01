@@ -15,6 +15,14 @@ hide_menu_style = """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
 st.sidebar.image("resources/images/skillcorner_x_psg.jpg")
+hide_img_fs = '''
+<style>
+button[title="View fullscreen"]{
+    visibility: hidden;}
+</style>
+'''
+st.markdown(hide_img_fs, unsafe_allow_html=True)
+
 st.sidebar.divider()
 
 st.title("SkillCorner Scatter Plot Dashboard")
