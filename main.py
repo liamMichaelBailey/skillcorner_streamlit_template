@@ -2,7 +2,7 @@ import streamlit as st
 from src import user_authentication as user_auth
 from src import scatter_plot_dashboard
 
-st.set_page_config(page_title='SkillCorner Scatter Plot Dashboard',
+st.set_page_config(page_title='SkillCorner Visualisation Dashboard',
                    page_icon='resources/images/skillcorner_icon.png',
                    layout="wide")
 
