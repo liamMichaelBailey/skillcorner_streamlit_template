@@ -12,7 +12,8 @@ from skillcorner_analysis_lib.src.utils import skillcorner_physical_utils as scp
 from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils
 from skillcorner_analysis_lib.src.request_handlers.game_intelligence_requests import GameIntelligenceRequests
 from skillcorner_analysis_lib.src.request_handlers.physical_requests import PhysicalRequests
-from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter
+from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, bar_plot as bar
+from streamlit_option_menu import option_menu
 
 
 def main(seasons, competitions):
@@ -121,92 +122,157 @@ def main(seasons, competitions):
 
     # Plot generation.
     if 'spb_requests_complete' in st.session_state:
-        st.subheader('Filter & edit data')
+        st.subheader('Filter & edit data', help='Options to filter the dataframe by values such as '
+                                                'position & match count. Furthermore fields like '
+                                                'player_name can be edited.')
         filtered_df = streamlit_utils.filter_dataframe(st.session_state.df,
                                                        st.session_state.df.columns)
 
         st.write('Filtered DataFrame (values can be edited) - ' + str(len(filtered_df)) + ' data points')
         edited_df = st.data_editor(filtered_df)
 
-        st.subheader('Plot parameters')
-        st.write('Axis values:')
+        st.divider()
 
-        x_col_1, x_col_2, x_col_3 = st.columns(3)
-        y_col_1, y_col_2, y_col_3 = st.columns(3)
+        st.subheader('Plot data')
 
-        x_value = x_col_1.selectbox('X-axis metric', st.session_state.metrics)
-        x_label = x_col_2.text_input('X-axis label', x_value.replace('_', ' ').title())
-        x_unit = x_col_3.selectbox('X-axis unit', st.session_state.units)
+        # 2. horizontal menu
+        chart_type = option_menu(None, ['Scatter Plot', 'Bar Chart', 'Table'],
+                                 icons=['graph-up', 'bar-chart-line-fill', 'table'],
+                                 default_index=0, orientation="horizontal")
 
-        y_value = y_col_1.selectbox('Y-axis metric', st.session_state.metrics)
-        y_label = y_col_2.text_input('Y-axis label', y_value.replace('_', ' ').title())
-        y_unit = y_col_3.selectbox('Y-axis unit', st.session_state.units)
+        if chart_type == 'Scatter Plot':
+            st.write('Axis values:')
 
-        st.write('Data point label values:')
-        scatter_label = st.selectbox('Text label for points', list(st.session_state.inputs['split_by']) + ['data_point_id'])
+            x_col_1, x_col_2, x_col_3 = st.columns(3)
+            y_col_1, y_col_2, y_col_3 = st.columns(3)
 
-        label_specific_points = st.checkbox('Label specific data points')
-        label_col_1, label_col_2 = st.columns(2)
-        if label_specific_points == True:
-            target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
-            comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
-        else:
-            comparison_points = []
-            target_points = []
+            x_value = x_col_1.selectbox('X-axis metric', st.session_state.metrics)
+            x_label = x_col_2.text_input('X-axis label', x_value.replace('_', ' ').title())
+            x_unit = x_col_3.selectbox('X-axis unit', st.session_state.units)
 
-        label_standard_deviation = st.checkbox('Label data points N standard deviations from the mean')
-        sd_col_1, sd_col_2, sd_col_3 = st.columns(3)
-        if label_standard_deviation == True:
-            x_axis_standard_deviation = sd_col_1.number_input('X-axis standard deviation', -4.0, 4.0, 1.5)
-            y_axis_standard_deviation = sd_col_2.number_input('Y-axis standard deviation', -4.0, 4.0, 1.5)
-            include_below_average = sd_col_3.checkbox('Include data points below average')
-        else:
-            x_axis_standard_deviation = None
-            y_axis_standard_deviation = None
-            include_below_average = False
+            y_value = y_col_1.selectbox('Y-axis metric', st.session_state.metrics)
+            y_label = y_col_2.text_input('Y-axis label', y_value.replace('_', ' ').title())
+            y_unit = y_col_3.selectbox('Y-axis unit', st.session_state.units)
 
-        label_all = st.checkbox('Label all data points (plot could be hard to read!)')
-        if label_all == True:
-            x_axis_standard_deviation = -10
-            y_axis_standard_deviation = -10
+            st.divider()
+            st.write('Data point label values:')
+            scatter_label = st.selectbox('Text label for points',
+                                         list(st.session_state.inputs['split_by']) + ['data_point_id'])
 
-        show_regression_line = st.checkbox('Show Regression Line')
-        if show_regression_line:
-            edited_df = edited_df[(~edited_df[x_value].isna()) & (~edited_df[y_value].isna())]
+            label_specific_points = st.checkbox('Label specific data points')
+            label_col_1, label_col_2 = st.columns(2)
+            if label_specific_points == True:
+                target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
+                comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
+            else:
+                comparison_points = []
+                target_points = []
 
-        if st.button('📊 Plot data'):
-            with st.spinner('Plotting data...'):
-                fig, ax = scatter.plot_scatter(df=edited_df,
-                                               x_metric=x_value,
-                                               y_metric=y_value,
-                                               data_point_label=scatter_label,
-                                               x_label=x_label,
-                                               y_label=y_label,
-                                               x_annotation=None,
-                                               y_annotation=None,
-                                               x_unit=x_unit,
-                                               y_unit=y_unit,
-                                               x_sd_highlight=x_axis_standard_deviation,
-                                               y_sd_highlight=y_axis_standard_deviation,
-                                               include_below_average=include_below_average,
-                                               primary_highlight_group=target_points,
-                                               secondary_highlight_group=comparison_points,
-                                               regression_line=show_regression_line,
-                                               data_point_id='data_point_id')
+            label_standard_deviation = st.checkbox('Label data points N standard deviations from the average',
+                                                   help='Data points 1 standard deviation from the average are considered high/low'
+                                                        'Data points 2 standard deviation from the average are considered very high/low')
+            sd_col_1, sd_col_2 = st.columns(2)
+            if label_standard_deviation == True:
+                x_axis_standard_deviation = sd_col_1.slider('X-axis standard deviation', 0.0, 4.0, 1.5)
+                y_axis_standard_deviation = sd_col_2.slider('Y-axis standard deviation', 0.0, 4.0, 1.5)
+                include_below_average = st.toggle('Include data points below average')
+            else:
+                x_axis_standard_deviation = None
+                y_axis_standard_deviation = None
+                include_below_average = False
 
-                st.pyplot(fig)
+            label_all = st.checkbox('Label all data points (plot could be hard to read!)')
+            if label_all == True:
+                x_axis_standard_deviation = -10
+                y_axis_standard_deviation = -10
 
-                fig.savefig('output/plot.png',
-                            format='png',
-                            dpi=300,
-                            bbox_inches='tight')
+            st.divider()
+            st.write('Benchmark options:')
+            show_average_line = st.toggle('Show sample average', value=True)
+            show_regression_line = st.toggle('Show regression line')
+            st.divider()
 
-                with open("output/plot.png", "rb") as file:
-                    st.download_button(
-                        label="Download plot",
-                        data=file,
-                        file_name="plot.png",
-                        mime="image/png")
+            if show_regression_line:
+                edited_df = edited_df[(~edited_df[x_value].isna()) & (~edited_df[y_value].isna())]
+
+            if st.button('📊 Plot data'):
+                with st.spinner('Plotting data...'):
+                    fig, ax = scatter.plot_scatter(df=edited_df,
+                                                   x_metric=x_value,
+                                                   y_metric=y_value,
+                                                   data_point_label=scatter_label,
+                                                   x_label=x_label,
+                                                   y_label=y_label,
+                                                   x_annotation=None,
+                                                   y_annotation=None,
+                                                   x_unit=x_unit,
+                                                   y_unit=y_unit,
+                                                   x_sd_highlight=x_axis_standard_deviation,
+                                                   y_sd_highlight=y_axis_standard_deviation,
+                                                   include_below_average=include_below_average,
+                                                   primary_highlight_group=target_points,
+                                                   secondary_highlight_group=comparison_points,
+                                                   avg_line=show_average_line,
+                                                   regression_line=show_regression_line,
+                                                   data_point_id='data_point_id')
+
+                    st.pyplot(fig)
+
+                    fig.savefig('output/plot.png',
+                                format='png',
+                                dpi=300,
+                                bbox_inches='tight')
+
+                    with open("output/plot.png", "rb") as file:
+                        st.download_button(
+                            label="Download plot",
+                            data=file,
+                            file_name="plot.png",
+                            mime="image/png")
+
+        if chart_type == 'Bar Chart':
+            st.write('Axis values:')
+
+            x_col_1, x_col_2, x_col_3 = st.columns(3)
+            metric = x_col_1.selectbox('Metric', st.session_state.metrics)
+            label = x_col_2.text_input('Label', metric.replace('_', ' ').title())
+            unit = x_col_3.selectbox('Unit', st.session_state.units)
+
+            st.divider()
+            st.write('Data points to include:')
+            data_point_label = st.selectbox('Text label for points',
+                                         list(st.session_state.inputs['split_by']) + ['data_point_id'])
+
+            label_col_1, label_col_2 = st.columns(2)
+            primary_highlight_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
+            secondary_highlight_points = label_col_2.multiselect('Secondary highlight color',
+                                                                 edited_df['data_point_id'])
+
+            st.divider()
+            st.write('Format options:')
+            orientation = st.toggle('Vertical bars')
+            bar_values = st.toggle('Display bar values')
+            st.divider()
+
+            if st.button('📊 Plot bar chart'):
+                with st.spinner('Plotting data...'):
+                    fig, ax = bar.plot_bar_chart(df=edited_df,
+                                                 metric=metric,
+                                                 label=label,
+                                                 data_point_label=data_point_label,
+                                                 unit=unit,
+                                                 primary_highlight_group=primary_highlight_points,
+                                                 secondary_highlight_group=secondary_highlight_points,
+                                                 add_bar_values=bar_values,
+                                                 vertical=orientation,
+                                                 data_point_id='data_point_id')
+
+                    st.pyplot(fig)
+
+                    fig.savefig('output/plot.png',
+                                format='png',
+                                dpi=300,
+                                bbox_inches='tight')
 
         with open("output/plot_data.csv", "rb") as file:
             st.download_button(

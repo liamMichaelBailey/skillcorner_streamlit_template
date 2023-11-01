@@ -103,7 +103,7 @@ def filter_dataframe(df: pd.DataFrame, columns) -> pd.DataFrame:
                     step=step,
                 )
                 df = df[df[column].between(*user_num_input)]
-            elif is_categorical_dtype(df[column]) or df[column].nunique() < 15:
+            elif is_categorical_dtype(df[column]) or df[column].nunique() < 1000:
                 user_cat_input = right.multiselect(
                     f"Values for {column}",
                     df[column].unique(),
