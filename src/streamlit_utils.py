@@ -60,6 +60,17 @@ def add_logo():
         """,
         unsafe_allow_html=True)
 
+def get_filter_columns(df: pd.DataFrame):
+    filter_columns = ['player_name', 'player_birthdate', 'team_name', 'competition_name',
+                      'position', 'group', 'count_match', 'count_match_failed',
+                      'minutes_played_per_match', 'adjusted_mins_tip_per_match', 'Minutes TIP', 'Minutes OTIP']
+
+    in_sample_cols = [x for x in list(df.columns) if 'in_sample' in x]
+
+    filter_columns = filter_columns + in_sample_cols
+
+    return [x for x in filter_columns if x in list(df.columns)]
+
 
 def filter_dataframe(df: pd.DataFrame, columns) -> pd.DataFrame:
     """
@@ -238,7 +249,8 @@ def image_explorer(image_paths, image_captions):
             mime="image/png")
 
 
-def standard_data_input_interface(seasons=None, competitions=None, playing_time=True, split_by_options=None):
+def standard_data_input_interface(seasons=None, competitions=None, playing_time=True, split_by_options=None,
+                                  competition_limit=None):
     """
     Creates a standard data input interface for selecting seasons, competitions, playing time, and split options.
     Args:
@@ -246,6 +258,7 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
         competitions: DataFrame containing competition information
         playing_time: Whether to include playing time options or not
         split_by_options: List of split options
+        competition_limit: number to limit competition selection by
     Returns:
         inputs: Dictionary containing the selected input values
     """
@@ -266,30 +279,47 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
         competitions = competitions[competitions['id'].isin(FEMALE_COMPETITION_IDS)]
 
     if competitions is not None:
-        container = st.container()
-        all_competitions = st.checkbox("All competitions")
-        big_eu_competitions = ['ENG Premier League',
-                               'ESP LaLiga',
-                               'FRA Ligue 1',
-                               'GER Bundesliga',
-                               'ITA Serie A']
-        default_competitions = (
-            big_eu_competitions if set(big_eu_competitions).issubset(set(competitions['full_name'])) else None)
+        if competition_limit is None:
+            container = st.container()
+            all_competitions = st.checkbox("All competitions")
+            big_eu_competitions = ['ENG Premier League',
+                                   'ESP LaLiga',
+                                   'FRA Ligue 1',
+                                   'GER Bundesliga',
+                                   'ITA Serie A']
+            default_competitions = (
+                big_eu_competitions if set(big_eu_competitions).issubset(set(competitions['full_name'])) else None)
 
-        if all_competitions:
-            competition_selection = container.multiselect('Competitions:',
-                                                          competitions['full_name'],
-                                                          competitions['full_name'],
-                                                          default_competitions,
-                                                          label_visibility='collapsed')
+            if all_competitions:
+                competition_selection = container.multiselect('Competitions:',
+                                                              competitions['full_name'],
+                                                              competitions['full_name'],
+                                                              default_competitions,
+                                                              label_visibility='collapsed')
 
+            else:
+                competition_selection = container.multiselect('Competitions:',
+                                                              competitions['full_name'],
+                                                              default_competitions,
+                                                              label_visibility='collapsed')
+
+            inputs['competition_selection'] = competition_selection
         else:
-            competition_selection = container.multiselect('Competitions:',
-                                                          competitions['full_name'],
-                                                          default_competitions,
-                                                          label_visibility='collapsed')
+            big_eu_competitions = ['ENG Premier League',
+                                   'ESP LaLiga',
+                                   'FRA Ligue 1',
+                                   'GER Bundesliga',
+                                   'ITA Serie A']
+            default_competitions = (
+                big_eu_competitions if set(big_eu_competitions).issubset(set(competitions['full_name'])) else None)
 
-        inputs['competition_selection'] = competition_selection
+            competition_selection = st.multiselect('Competitions:',
+                                                   competitions['full_name'],
+                                                   default_competitions,
+                                                   label_visibility='collapsed',
+                                                   max_selections=10)
+
+            inputs['competition_selection'] = competition_selection
 
     if playing_time:
         playing_time_col1, playing_time_col2 = st.columns(2)

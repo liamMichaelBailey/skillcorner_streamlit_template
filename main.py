@@ -25,15 +25,15 @@ st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 st.sidebar.divider()
 
-st.title("SkillCorner Visualisation Dashboard")
+st.title("SkillCorner Visualisation Dashboard", anchor=False)
 
 st.markdown(
     """
     This early stage project allows for flexible plot creation using a standard SkillCorner scatter plot. The aim 
     is to have the key metrics for each package available to be easily plotted at any level of aggregation (player, 
-    team, competition). Currently physical, GI off-ball run & GI Pressure metrics are available.
-    ##### Common errors:
-    - Please report any errors you find.
+    team, competition). Currently three chart types are available: scatter, bar & table. The app works in two stages:
+    1. Requesting the data from the api. Data can be grouped at player, team or competition level.
+    2. Filtering & plotting data. Once data is returned from the api it can be filtered & plotted by the user.
     """
 )
 
@@ -47,9 +47,6 @@ if 'authenticated' not in st.session_state:
 # Code assuming the user is logged IN goes in here.
 if 'authenticated' in st.session_state:
     user_auth.logout_component()
-
-    with st.expander('Available competition editions'):
-        st.write(st.session_state.accessible_competition_edition_names)
 
     scatter_plot_dashboard.main(seasons=st.session_state.accessible_seasons,
                                 competitions=st.session_state.accessible_competitions)

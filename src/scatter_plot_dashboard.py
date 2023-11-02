@@ -12,7 +12,7 @@ from skillcorner_analysis_lib.src.utils import skillcorner_physical_utils as scp
 from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils
 from skillcorner_analysis_lib.src.request_handlers.game_intelligence_requests import GameIntelligenceRequests
 from skillcorner_analysis_lib.src.request_handlers.physical_requests import PhysicalRequests
-from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter,\
+from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, \
     bar_plot as bar, summary_table as table
 from streamlit_option_menu import option_menu
 
@@ -20,7 +20,12 @@ from streamlit_option_menu import option_menu
 def main(seasons, competitions):
     # Data request params.
     if 'spb_requests_complete' not in st.session_state:
-        st.subheader('Data request (step 1 of 2)', anchor=None)
+        st.subheader('Data request (step 1 of 2)',
+                     anchor=False,
+                     help="Select the package, competition, seasons & how "
+                          "you want to group the data. Use the side panel "
+                          "to see which competition/season combinations are "
+                          "available in your package")
 
         st.session_state.endpoint = st.selectbox('SkillCorner package:',
                                                  ['Physical',
@@ -34,7 +39,8 @@ def main(seasons, competitions):
                                                    playing_time=True,
                                                    split_by_options=['player', 'team', 'season',
                                                                      'competition', 'group',
-                                                                     'position'])
+                                                                     'position'],
+                                                   competition_limit=10)
 
         st.session_state.inputs = \
             st_utils.parse_standard_user_inputs(st.session_state.inputs,
@@ -119,22 +125,29 @@ def main(seasons, competitions):
                 st.session_state.df.to_csv('output/plot_data.csv')
 
                 st.session_state.spb_requests_complete = True
-                st.experimental_rerun()
+                st.rerun()
 
     # Plot generation.
     if 'spb_requests_complete' in st.session_state:
-        st.subheader('Filter & edit data', help='Options to filter the dataframe by values such as '
-                                                'position & match count. Furthermore fields like '
-                                                'player_name can be edited.')
+        st.subheader('Filter & edit data',
+                     anchor=False,
+                     help='Options to filter the dataframe by values such as '
+                          'position & match count. Furthermore fields like '
+                          'player_name can be edited.')
+
+        filter_columns = streamlit_utils.get_filter_columns(st.session_state.df)
         filtered_df = streamlit_utils.filter_dataframe(st.session_state.df,
-                                                       st.session_state.df.columns)
+                                                       filter_columns)
 
         st.write('Filtered DataFrame (values can be edited) - ' + str(len(filtered_df)) + ' data points')
-        edited_df = st.data_editor(filtered_df)
+        edited_df = st.data_editor(filtered_df,
+                                   column_order=filter_columns)
 
         st.divider()
 
-        st.subheader('Plot data')
+        st.subheader('Plot data',
+                     anchor=False,
+                     help="Plot the data in three formats: scatter plot, bar chart or table.")
 
         # 2. horizontal menu
         chart_type = option_menu(None, ['Scatter Plot', 'Bar Chart', 'Table'],
@@ -242,7 +255,7 @@ def main(seasons, competitions):
             st.divider()
             st.write('Data points to include:')
             data_point_label = st.selectbox('Text label for points',
-                                         list(st.session_state.inputs['split_by']) + ['data_point_id'])
+                                            list(st.session_state.inputs['split_by']) + ['data_point_id'])
 
             label_col_1, label_col_2 = st.columns(2)
             primary_highlight_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
@@ -278,21 +291,52 @@ def main(seasons, competitions):
         if chart_type == 'Table':
             st.write('Metrics:')
             metrics = st.multiselect('Metrics', st.session_state.metrics)
-            labels = st.data_editor([m.replace('_', ' ').title() for m in metrics])
+
+            with st.expander('Edit metric display names'):
+                name_col1, name_col2 = st.columns(2)
+                metric_name_updates = []
+                for i, m in enumerate(metrics):
+                    if i % 2 == 0:
+                        metric_name_updates.append(name_col1.text_input(m, m.replace('_', ' ').title()))
+                    if i % 2 == 1:
+                        metric_name_updates.append(name_col2.text_input(m, m.replace('_', ' ').title()))
 
             st.divider()
-            st.write('Data points to include:')
-            data_points = st.multiselect('Data points', edited_df['data_point_id'])
 
+            st.write('Data points to include:')
+
+            data_points = st.multiselect('Data points', edited_df['data_point_id'])
+            data_point_label = st.selectbox('Text label for data points',
+                                         list(st.session_state.inputs['split_by']) + ['data_point_id'])
+
+            st.divider()
+
+            st.write('Table Options:')
+
+            rotate_column_names = st.toggle('Rotate column headings')
+            display_metric_value = st.toggle('Display metric value', value=True)
+            display_percentile_value = st.toggle('Display percentile value', value=True)
 
             if st.button('📊 Plot table'):
+                if display_metric_value == True & display_percentile_value == True:
+                    display = 'values+rank'
+                elif display_metric_value == True:
+                    display = 'values'
+                elif display_percentile_value == True:
+                    display = 'rank'
+                else:
+                    display = 'none'
+
                 with st.spinner('Plotting data...'):
                     fig, ax = table.plot_summary_table_rev(df=edited_df,
                                                            metrics=metrics,
-                                                           metric_col_names=labels,
+                                                           metric_col_names=metric_name_updates,
                                                            players=data_points,
-                                                           data_point_label='player_name',
-                                                           data_point_id='data_point_id')
+                                                           data_point_label=data_point_label,
+                                                           data_point_id='data_point_id',
+                                                           percentiles_mode=True,
+                                                           rotate_column_names=rotate_column_names,
+                                                           mode=display)
 
                     st.pyplot(fig)
 
@@ -300,7 +344,6 @@ def main(seasons, competitions):
                                 format='png',
                                 dpi=300,
                                 bbox_inches='tight')
-
 
         with open("output/plot_data.csv", "rb") as file:
             st.download_button(
@@ -316,4 +359,4 @@ def main(seasons, competitions):
                     del st.session_state[key]
             st.experimental_memo.clear()
             st.experimental_singleton.clear()
-            st.experimental_rerun()
+            st.rerun()

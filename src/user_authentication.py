@@ -73,8 +73,16 @@ def login_component():
 
 
 # A function to give the user the impression of logging out.
-def logout_component():
+def logout_component(show_competition_access=True):
     st.sidebar.write("Welcome " + st.session_state.username)
+
+    if show_competition_access:
+        st.sidebar.dataframe(st.session_state.accessible_competition_edition_names,
+                     column_config={
+                         "0": "My competition editions",
+                     },
+                     height=250,
+                     hide_index=True)
 
     if st.sidebar.button('Log out'):
         for key in st.session_state.keys():
