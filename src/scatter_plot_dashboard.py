@@ -209,7 +209,7 @@ def main(seasons, competitions):
             if show_regression_line:
                 edited_df = edited_df[(~edited_df[x_value].isna()) & (~edited_df[y_value].isna())]
 
-            if st.button('📊 Plot scatter plot'):
+            if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
                     fig, ax = scatter.plot_scatter(df=edited_df,
                                                    x_metric=x_value,
@@ -268,7 +268,7 @@ def main(seasons, competitions):
             bar_values = st.toggle('Display bar values')
             st.divider()
 
-            if st.button('📊 Plot bar chart'):
+            if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
                     fig, ax = bar.plot_bar_chart(df=edited_df,
                                                  metric=metric,
@@ -317,7 +317,7 @@ def main(seasons, competitions):
             display_metric_value = st.toggle('Display metric value', value=True)
             display_percentile_value = st.toggle('Display percentile value', value=True)
 
-            if st.button('📊 Plot table'):
+            if st.button('📊 Plot data'):
                 if display_metric_value == True & display_percentile_value == True:
                     display = 'values+rank'
                 elif display_metric_value == True:
