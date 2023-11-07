@@ -7,9 +7,6 @@ This page should allow for the building of simple standard skillcorner plots.
 from src import streamlit_utils as st_utils
 import streamlit as st
 from src import streamlit_utils as streamlit_utils
-from skillcorner_analysis_lib.src.utils import skillcorner_game_intelligence_utils as scgi_utils
-from skillcorner_analysis_lib.src.utils import skillcorner_physical_utils as scphys_utils
-from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils
 from skillcorner_analysis_lib.src.request_handlers.game_intelligence_requests import GameIntelligenceRequests
 from skillcorner_analysis_lib.src.request_handlers.physical_requests import PhysicalRequests
 from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, \
@@ -22,8 +19,8 @@ def main(seasons, competitions):
     if 'spb_requests_complete' not in st.session_state:
         st.subheader('Data request (step 1 of 2)',
                      anchor=False,
-                     help="Select the package, competition, seasons & how "
-                          "you want to group the data. Use the side panel "
+                     help="Select the package, competition, seasons & send request to "
+                          "the SkillCorner API. Use the side panel "
                           "to see which competition/season combinations are "
                           "available in your package")
 
@@ -118,18 +115,20 @@ def main(seasons, competitions):
     if 'spb_requests_complete' in st.session_state:
         st.subheader('Group & filter data',
                      anchor=False,
-                     help='Options to filter the dataframe by values such as '
-                          'position & match count. Furthermore fields like '
+                     help='Options to group & filter the dataframe. Furthermore fields like '
                           'player_name can be edited.')
 
-        with st.expander('Group DataFrame'):
+        with st.expander('Group data', ):
+            st.caption('Group the data into player, team or competition level benchmarks.')
             grouped_data, minutes, match_count = st_utils.group_match_by_match_data_ui(st.session_state.df,
                                                                                        st.session_state.endpoint,
                                                                                        grouping_options=None,
                                                                                        minutes_range=(30, 90),
                                                                                        matches_range=(0, 20))
 
-        with st.expander('Filter DataFrame'):
+        with st.expander('Filter data'):
+            st.caption('Filter the data on fields such as position/group to only include '
+                       'specific data points in the sample.')
             filter_columns = streamlit_utils.get_filter_columns(grouped_data)
             if 'player_name' in grouped_data.columns:
                 filter_columns = ['player_name', 'short_name'] + filter_columns
@@ -295,7 +294,6 @@ def main(seasons, competitions):
 
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info, x=0, y=-0.125)
-
 
                     fig.savefig('output/plot.png',
                                 format='png',

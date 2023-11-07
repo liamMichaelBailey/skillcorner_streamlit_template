@@ -32,8 +32,8 @@ st.markdown(
     This early stage project allows for flexible plot creation using a standard SkillCorner scatter plot. The aim 
     is to have the key metrics for each package available to be easily plotted at any level of aggregation (player, 
     team, competition). Currently three chart types are available: scatter, bar & table. The app works in two stages:
-    1. Requesting the data from the api. Data can be grouped at player, team or competition level.
-    2. Filtering & plotting data. Once data is returned from the api it can be filtered & plotted by the user.
+    1. Requesting the data from the api.
+    2. Grouping, filtering & plotting data.
     """
 )
 
