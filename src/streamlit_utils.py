@@ -3,6 +3,8 @@ Liam Bailey
 This file contains functions to help to use Streamlit.
 """
 import json
+import math
+
 import streamlit as st
 from PIL import Image
 import pandas as pd
@@ -14,7 +16,8 @@ from pandas.api.types import (
 )
 from streamlit_image_select import image_select
 from skillcorner_analysis_lib.src.utils.constants import FEMALE_COMPETITION_IDS
-from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils
+from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils, \
+    skillcorner_game_intelligence_utils as gi_utils, skillcorner_physical_utils as phy_utils
 
 
 # Function to get meta data.
@@ -60,10 +63,9 @@ def add_logo():
         """,
         unsafe_allow_html=True)
 
+
 def get_filter_columns(df: pd.DataFrame):
-    filter_columns = ['player_name', 'player_birthdate', 'team_name', 'competition_name',
-                      'position', 'group', 'count_match', 'count_match_failed',
-                      'minutes_played_per_match', 'adjusted_mins_tip_per_match', 'Minutes TIP', 'Minutes OTIP']
+    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'position', 'group', 'count_match']
 
     in_sample_cols = [x for x in list(df.columns) if 'in_sample' in x]
 
@@ -106,21 +108,17 @@ def filter_dataframe(df: pd.DataFrame, columns) -> pd.DataFrame:
                 _min = float(df[column].min())
                 _max = float(df[column].max())
                 step = (_max - _min) / 100
-                user_num_input = right.slider(
-                    f"Values for {column}",
-                    _min,
-                    _max,
-                    (_min, _max),
-                    step=step,
-                )
-                df = df[df[column].between(*user_num_input)]
-            elif is_categorical_dtype(df[column]) or df[column].nunique() < 1000:
-                user_cat_input = right.multiselect(
-                    f"Values for {column}",
-                    df[column].unique(),
-                    default=[],
-                )
-                df = df[df[column].isin(user_cat_input)]
+                if not math.isnan(_min) and not math.isnan(_max) and step > 0:
+                    user_num_input = right.slider(
+                        f"Values for {column}",
+                        _min,
+                        _max,
+                        (_min, _max),
+                        step=step,
+                    )
+                    df = df[df[column].between(*user_num_input)]
+                else:
+                    right.caption(f"No values to work out range for {column}")
             elif is_datetime64_any_dtype(df[column]):
                 user_date_input = right.date_input(
                     f"Values for {column}",
@@ -133,6 +131,13 @@ def filter_dataframe(df: pd.DataFrame, columns) -> pd.DataFrame:
                     user_date_input = tuple(map(pd.to_datetime, user_date_input))
                     start_date, end_date = user_date_input
                     df = df.loc[df[column].between(start_date, end_date)]
+            elif is_categorical_dtype(df[column]) or df[column].nunique() < 1000:
+                user_cat_input = right.multiselect(
+                    f"Values for {column}",
+                    df[column].unique(),
+                    default=[],
+                )
+                df = df[df[column].isin(user_cat_input)]
             else:
                 user_text_input = right.text_input(
                     f"Search {column}",
@@ -265,7 +270,7 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
     inputs = {}
 
     if seasons is not None:
-        default_season = ('2022/2023' if '2022/2023' in list(seasons['name']) else None)
+        default_season = ('2023/2024' if '2023/2024' in list(seasons['name']) else None)
         season_selection = st.multiselect('Seasons:', seasons['name'], default_season)
         inputs['season_selection'] = season_selection
 
@@ -282,11 +287,7 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
         if competition_limit is None:
             container = st.container()
             all_competitions = st.checkbox("All competitions")
-            big_eu_competitions = ['ENG Premier League',
-                                   'ESP LaLiga',
-                                   'FRA Ligue 1',
-                                   'GER Bundesliga',
-                                   'ITA Serie A']
+            big_eu_competitions = ['FRA Ligue 1']
             default_competitions = (
                 big_eu_competitions if set(big_eu_competitions).issubset(set(competitions['full_name'])) else None)
 
@@ -305,11 +306,7 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
 
             inputs['competition_selection'] = competition_selection
         else:
-            big_eu_competitions = ['ENG Premier League',
-                                   'ESP LaLiga',
-                                   'FRA Ligue 1',
-                                   'GER Bundesliga',
-                                   'ITA Serie A']
+            big_eu_competitions = ['FRA Ligue 1']
             default_competitions = (
                 big_eu_competitions if set(big_eu_competitions).issubset(set(competitions['full_name'])) else None)
 
@@ -394,3 +391,104 @@ def standard_position_filtering_interface(df, split_by_options):
         filtered_df = df
 
     return filtered_df, position_selection
+
+
+def group_match_by_match_data_ui(match_by_match_df,
+                                 endpoint,
+                                 grouping_options=None,
+                                 minutes_range=(0, 90),
+                                 matches_range=(0, 20)):
+
+    if grouping_options is None:
+        grouping_options = ['player', 'team', 'competition', 'group', 'position']
+
+    group_col1, group_col2 = st.columns(2)
+    grouping_conditions = \
+        st.multiselect('Group data by:',
+                       grouping_options,
+                       ['player', 'team', 'group'])
+
+    grouping_conditions = [s + '_name' if s not in ['position', 'group'] else s for s in grouping_conditions]
+
+    if 'player_name' in grouping_conditions:
+        grouping_conditions += ['player_birthdate', 'short_name']
+
+    minutes = group_col1.slider('Minimum minutes:', minutes_range[0], minutes_range[1], 60, step=5)
+    match_count = group_col2.slider('Minimum matches:', matches_range[0], matches_range[1], 8, step=1)
+
+    df = match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
+        grouping_conditions).mean().reset_index()
+    df['count_match'] = list(match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
+        grouping_conditions).size())
+    df = df[df['count_match'] >= match_count]
+
+    if endpoint == 'Off-ball runs':
+        st.session_state.metrics = gi_utils.add_run_normalisations(df, add_p90=False)
+        st.session_state.units = [None, '%']
+    if endpoint == 'Passing':
+        st.session_state.metrics = gi_utils.add_pass_normalisations(df, add_p90=False)
+        st.session_state.units = [None, '%']
+    if endpoint == 'Dealing with pressure':
+        st.session_state.metrics = gi_utils.add_playing_under_pressure_normalisations(df, add_p90=False)
+        st.session_state.units = [None, '%']
+    if endpoint == 'Physical':
+        st.session_state.metrics = phy_utils.add_standard_metrics(st.session_state.df)
+        # List of specified substrings
+        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute"]
+        filtered_list = []
+
+        # Iterate through the original list
+        for item in st.session_state.metrics:
+            # Check if any of the specified substrings are present in the item
+            if any(substring in item for substring in specified_substrings):
+                filtered_list.append(item)
+
+        filtered_list.remove("Top 5 PSV-99")
+        st.session_state.metrics = filtered_list
+        st.session_state.units = [None, 'm', 'km/h']
+
+    for column in df.columns:
+        if 'in_sample' in column:
+            df[column] = df[column] * df['count_match']
+
+    skc_utils.add_data_point_id(df,
+                                grouping_conditions)
+
+    first_column = df.pop('data_point_id')
+    df.insert(0, 'data_point_id', first_column)
+
+    return df, minutes, match_count
+
+
+def get_chart_label_options(df):
+    if 'player_name' in df.columns:
+        return ['player_name', 'short_name']
+    elif 'team_name' in df.columns:
+        return ['team_name']
+    elif 'competition_name' in df.columns:
+        return ['competition_name']
+    else:
+        return []
+
+
+def add_plot_sample(ax, text, x=0, y=0, fontsize=6):
+    ax.text(x, y, text,
+            size=fontsize,
+            horizontalalignment='left',
+            verticalalignment='center',
+            transform=ax.transAxes)
+
+    return ax
+
+
+def get_axis_unit(metric):
+    if ' distance ' in ' ' + metric.lower().replace('_', ' ') + ' ':
+        return 'm'
+    elif ' psv-99 ' in ' ' + metric.lower().replace('_', ' ') + ' ':
+        return 'km/h'
+    elif ' ratio ' in ' ' + metric.lower().replace('_', ' ') + ' ':
+        return '%'
+    elif ' percentage ' in ' ' + metric.lower().replace('_', ' ') + ' ':
+        return '%'
+    else:
+        return None
