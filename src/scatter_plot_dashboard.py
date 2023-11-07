@@ -182,7 +182,7 @@ def main(seasons, competitions):
             target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
             comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
 
-            label_standard_deviation = st.toggle('Label outlier datapoints',
+            label_standard_deviation = st.toggle('Label outlier data points',
                                                  help='Data points 1 standard deviation from the average are '
                                                       'considered high/low. Data points 2 standard deviation from the '
                                                       'average are considered very high/low.')

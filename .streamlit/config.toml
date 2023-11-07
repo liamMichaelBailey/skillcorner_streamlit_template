@@ -1,5 +1,3 @@
-[runner]
-fastRerun = false
 [theme]
 base = "dark"
 
