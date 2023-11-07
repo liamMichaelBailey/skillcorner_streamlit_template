@@ -69,7 +69,7 @@ def login_component():
 
                 st.session_state.authenticated = True
 
-        st.experimental_rerun()
+        st.rerun()
 
 
 # A function to give the user the impression of logging out.
@@ -89,7 +89,7 @@ def logout_component(show_competition_access=True):
             del st.session_state[key]
         st.experimental_memo.clear()
         st.experimental_singleton.clear()
-        st.experimental_rerun()
+        st.rerun()
 
 
 # Function to parse the competitions the user has access to.
