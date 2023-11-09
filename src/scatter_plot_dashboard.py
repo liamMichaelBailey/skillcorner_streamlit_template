@@ -379,7 +379,7 @@ def main(seasons, competitions):
                         st.download_button(
                             label="Download plot",
                             data=file,
-                            file_name="plot.png",
+                            file_name="skillcorner_plot.png",
                             mime="image/png")
 
                     st.pyplot(fig)
@@ -388,7 +388,7 @@ def main(seasons, competitions):
         st.download_button(
             "⬇ Download data",
             st.session_state.df.to_csv(index=False).encode('utf-8'),
-            "file.csv",
+            "skillcorner_match_data.csv",
             "text/csv",
             key='download-csv'
         )

@@ -432,7 +432,7 @@ def group_match_by_match_data_ui(match_by_match_df,
         st.session_state.metrics = gi_utils.add_playing_under_pressure_normalisations(df, add_p90=False)
         st.session_state.units = [None, '%']
     if endpoint == 'Physical':
-        st.session_state.metrics = phy_utils.add_standard_metrics(st.session_state.df)
+        st.session_state.metrics = phy_utils.add_standard_metrics(df)
         # List of specified substrings
         specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute" , 'Distance per Sprint']
         filtered_list = []
