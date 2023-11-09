@@ -65,7 +65,7 @@ def add_logo():
 
 
 def get_filter_columns(df: pd.DataFrame):
-    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'position', 'group', 'count_match']
+    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'season_name', 'position', 'group', 'count_match']
 
     in_sample_cols = [x for x in list(df.columns) if 'in_sample' in x]
 
@@ -400,7 +400,7 @@ def group_match_by_match_data_ui(match_by_match_df,
                                  matches_range=(0, 20)):
 
     if grouping_options is None:
-        grouping_options = ['player', 'team', 'competition', 'group', 'position']
+        grouping_options = ['player', 'team', 'competition', 'season', 'group', 'position']
 
     group_col1, group_col2 = st.columns(2)
     grouping_conditions = \
@@ -434,7 +434,7 @@ def group_match_by_match_data_ui(match_by_match_df,
     if endpoint == 'Physical':
         st.session_state.metrics = phy_utils.add_standard_metrics(st.session_state.df)
         # List of specified substrings
-        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute"]
+        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute" , 'Distance per Sprint']
         filtered_list = []
 
         # Iterate through the original list
