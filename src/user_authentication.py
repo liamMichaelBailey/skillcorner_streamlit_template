@@ -23,7 +23,7 @@ def get_competition_editions(username, password):
         'Referer': 'Client Scatter Plot Tool',
         'Username': username,
     }
-    request_string_competition_editions = 'https://skillcorner.com/api/competition_editions/?limit=1000'
+    request_string_competition_editions = 'https://skillcorner.com/api/competition_editions/?user=true&limit=1000'
     response_API = requests.get(request_string_competition_editions,
                                 headers=headers,
                                 auth=HTTPBasicAuth(username=username,
