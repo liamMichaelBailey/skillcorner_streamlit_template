@@ -213,7 +213,8 @@ def main(seasons, competitions):
             st.divider()
 
             if show_regression_line:
-                edited_df = edited_df[(~edited_df[x_value].isna()) & (~edited_df[y_value].isna())]
+                edited_df = edited_df[(~edited_df[st.session_state.metric_mappings[x_value]].isna()) &
+                                      (~edited_df[st.session_state.metric_mappings[y_value]].isna())]
 
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):

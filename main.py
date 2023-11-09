@@ -29,11 +29,17 @@ st.title("SkillCorner Visualisation Dashboard", anchor=False)
 
 st.markdown(
     """
-    This early stage project allows for flexible plot creation using a standard SkillCorner scatter plot. The aim 
-    is to have the key metrics for each package available to be easily plotted at any level of aggregation (player, 
-    team, competition). Currently three chart types are available: scatter, bar & table. The app works in two stages:
+    This SkillCorner Visualisation Tool is a
+    prototype product & that aims to enable easy & convenient
+    visualisation of SkillCorner Physical & Game Intelligence benchmarks. Using the tool, data can be
+    aggregated at player, team or competition level. Currently, three standard SkillCorner charts are
+    available: scatter plot, bar chart & formatted table. Please send any feedback on the application to the
+    SkillCorner Analysis team. The app works in two stages:
+    
     1. Requesting the data from the api.
-    2. Grouping, filtering & plotting data.
+    2. Grouping, filtering & plotting data. 
+    
+    [Open user guide](https://drive.google.com/file/d/1Z9xi1J_TXjsZf3funuHXAkgHc14a13IN/view?usp=sharing)
     """
 )
 
@@ -50,5 +56,3 @@ if 'authenticated' in st.session_state:
 
     scatter_plot_dashboard.main(seasons=st.session_state.accessible_seasons,
                                 competitions=st.session_state.accessible_competitions)
-
-
