@@ -492,3 +492,27 @@ def get_axis_unit(metric):
         return '%'
     else:
         return None
+
+
+def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, secondary_highlight_points, max_data_points=40):
+    if len(edited_df) > max_data_points:
+        number_of_highlights = \
+            max_data_points - len(primary_highlight_points + secondary_highlight_points)
+
+        edited_df = \
+            edited_df[(edited_df['data_point_id'].isin(primary_highlight_points)) |
+                      (edited_df['data_point_id'].isin(secondary_highlight_points)) |
+                      (edited_df['data_point_id'].isin(edited_df[~edited_df['data_point_id'].isin(
+                          primary_highlight_points + secondary_highlight_points)].nlargest(
+                          number_of_highlights, metric)['data_point_id']))]
+
+        st.warning('Warning: over ' + str(max_data_points) + ' data points in sample. '
+                                                             'Plot has been limited to the ' +
+                   str(len(primary_highlight_points + secondary_highlight_points)) + ' selected'
+                                                                                     ' highlight data'
+                                                                                     ' points & ' + str(
+            number_of_highlights) + ' highest '
+                                    'ranked data points on ' +
+                   metric + ' in the sample')
+
+    return edited_df

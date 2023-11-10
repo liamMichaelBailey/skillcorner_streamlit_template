@@ -38,8 +38,9 @@ st.markdown(
     
     1. Requesting the data from the api.
     2. Grouping, filtering & plotting data. 
-    
-    [Open user guide](https://drive.google.com/file/d/1Z9xi1J_TXjsZf3funuHXAkgHc14a13IN/view?usp=sharing)
+
+    [Open user guide](https://drive.google.com/file/d/1Z9xi1J_TXjsZf3funuHXAkgHc14a13IN/view?usp=sharing)\n
+    [Send feedback to the SkillCorner Analysis team](https://docs.google.com/forms/d/e/1FAIpQLSeMW0yLRNziF21fz9AZgD_YMpgAlCzVwpZBfFmnBWuE0NrkGQ/viewform?usp=sf_link)
     """
 )
 

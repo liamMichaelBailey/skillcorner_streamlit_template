@@ -181,28 +181,26 @@ def main(seasons, competitions):
             target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
             comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
 
-            label_standard_deviation = st.toggle('Label outlier data points',
-                                                 help='Data points 1 standard deviation from the average are '
-                                                      'considered high/low. Data points 2 standard deviation from the '
-                                                      'average are considered very high/low.')
-            sd_col_1, sd_col_2 = st.columns(2)
-            if label_standard_deviation == True:
-                x_axis_standard_deviation = sd_col_1.slider('X-axis standard deviation',
-                                                            min_value=0.0, max_value=4.0, value=1.5, step=0.05)
-                y_axis_standard_deviation = sd_col_2.slider('Y-axis standard deviation',
-                                                            min_value=0.0, max_value=4.0, value=1.5, step=0.05)
-                include_below_average = st.toggle('Include data points below average')
+            label_outliers = st.radio('Label outliers', ['None', 'Outliers', 'Only Very Big Outliers'],
+                                      horizontal=True, help='Outliers are the data points around the edge of the '
+                                                            'chart that rank very high or very low.')
+
+            if label_outliers == 'Very Big Outliers':
+                x_sd_highlight = 2
+                y_sd_highlight = 2
+            elif label_outliers == 'Outliers':
+                x_sd_highlight = 1
+                y_sd_highlight = 1
             else:
-                x_axis_standard_deviation = None
-                y_axis_standard_deviation = None
-                include_below_average = False
+                x_sd_highlight = None
+                y_sd_highlight = None
 
             label_all = st.toggle('Label all data points', help='If there are many data points in the sample, '
                                                                 'labeling all will increase the time it takes to '
                                                                 'generate the plot.')
             if label_all == True:
-                x_axis_standard_deviation = -10
-                y_axis_standard_deviation = -10
+                x_sd_highlight = -10
+                y_sd_highlight = -10
 
             st.divider()
             st.write('Benchmark options:')
@@ -228,9 +226,9 @@ def main(seasons, competitions):
                                                    y_annotation=None,
                                                    x_unit=st_utils.get_axis_unit(x_value),
                                                    y_unit=st_utils.get_axis_unit(y_value),
-                                                   x_sd_highlight=x_axis_standard_deviation,
-                                                   y_sd_highlight=y_axis_standard_deviation,
-                                                   include_below_average=include_below_average,
+                                                   x_sd_highlight=x_sd_highlight,
+                                                   y_sd_highlight=y_sd_highlight,
+                                                   include_below_average=True,
                                                    primary_highlight_group=target_points,
                                                    secondary_highlight_group=comparison_points,
                                                    avg_line=show_average_line,
@@ -282,6 +280,17 @@ def main(seasons, competitions):
 
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
+
+                    # Ensure sample is smaller than 40 data points so plot is readable.
+                    edited_df = st_utils.bar_chart_sample_filter(edited_df, metric,
+                                                                 primary_highlight_points, secondary_highlight_points)
+
+                    # Scale text to sample size.
+                    if len(edited_df) > 30:
+                        fontsize = 6
+                    else:
+                        fontsize = 7
+
                     fig, ax = bar.plot_bar_chart(df=edited_df,
                                                  metric=st.session_state.metric_mappings[metric],
                                                  label=label,
@@ -291,7 +300,8 @@ def main(seasons, competitions):
                                                  secondary_highlight_group=secondary_highlight_points,
                                                  add_bar_values=bar_values,
                                                  vertical=orientation,
-                                                 data_point_id='data_point_id')
+                                                 data_point_id='data_point_id',
+                                                 fontsize=fontsize)
 
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info, x=0, y=-0.125)
