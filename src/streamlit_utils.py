@@ -18,6 +18,8 @@ from streamlit_image_select import image_select
 from skillcorner_analysis_lib.src.utils.constants import FEMALE_COMPETITION_IDS
 from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils, \
     skillcorner_game_intelligence_utils as gi_utils, skillcorner_physical_utils as phy_utils
+import matplotlib.image as mpimg
+from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
 
 
 # Function to get meta data.
@@ -65,7 +67,8 @@ def add_logo():
 
 
 def get_filter_columns(df: pd.DataFrame):
-    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'season_name', 'position', 'group', 'count_match']
+    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'season_name', 'position', 'group',
+                      'count_match']
 
     in_sample_cols = [x for x in list(df.columns) if 'in_sample' in x]
 
@@ -398,7 +401,6 @@ def group_match_by_match_data_ui(match_by_match_df,
                                  grouping_options=None,
                                  minutes_range=(0, 90),
                                  matches_range=(0, 20)):
-
     if grouping_options is None:
         grouping_options = ['player', 'team', 'competition', 'season', 'group', 'position']
 
@@ -434,7 +436,8 @@ def group_match_by_match_data_ui(match_by_match_df,
     if endpoint == 'Physical':
         st.session_state.metrics = phy_utils.add_standard_metrics(df)
         # List of specified substrings
-        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute" , 'Distance per Sprint']
+        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute",
+                                'Distance per Sprint']
         filtered_list = []
 
         # Iterate through the original list
@@ -494,7 +497,8 @@ def get_axis_unit(metric):
         return None
 
 
-def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, secondary_highlight_points, max_data_points=40):
+def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, secondary_highlight_points,
+                            max_data_points=40):
     if len(edited_df) > max_data_points:
         number_of_highlights = \
             max_data_points - len(primary_highlight_points + secondary_highlight_points)
@@ -516,3 +520,31 @@ def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, seconda
                    metric + ' in the sample')
 
     return edited_df
+
+
+def add_user_logo(ax, chart_type):
+    watermark_img = mpimg.imread(st.secrets['WATERMARK_IMAGE_PATH'])
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+
+    if chart_type == 'scatter':
+        zoom = 0.04
+        xy = (xmax, ymax)
+        box_alignment = (0, 1)
+    elif chart_type == 'bar':
+        zoom = 0.04
+        xy = (xmin, ymax)
+        box_alignment = (1.1, 0)
+    elif chart_type == 'table':
+        zoom = 0.04
+        xy = (xmin, ymax)
+        box_alignment = (0, 1)
+    else:
+        return ax
+
+    imagebox = OffsetImage(watermark_img, zoom=zoom, dpi_cor=300, resample=True)
+    ab = AnnotationBbox(imagebox, xy, frameon=False,
+                        box_alignment=box_alignment, zorder=1)
+    ax.add_artist(ab)
+
+    return ax

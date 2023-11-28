@@ -4,6 +4,8 @@ Liam Bailey
 Main page for skillcorner plot builder.
 This page should allow for the building of simple standard skillcorner plots.
 """
+import numpy as np
+
 from src import streamlit_utils as st_utils
 import streamlit as st
 from src import streamlit_utils as streamlit_utils
@@ -12,7 +14,6 @@ from skillcorner_analysis_lib.src.request_handlers.physical_requests import Phys
 from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, \
     bar_plot as bar, summary_table as table
 from streamlit_option_menu import option_menu
-
 
 def main(seasons, competitions):
     # Data request params.
@@ -240,6 +241,9 @@ def main(seasons, competitions):
                                                       " | " + str(len(edited_df)) + " datapoints in sample",
                                                       x=0, y=-0.125)
 
+                    # Load the image for the watermark
+                    st_utils.add_user_logo(ax, 'scatter')
+
                     fig.savefig('output/plot.png',
                                 format='png',
                                 dpi=300,
@@ -249,7 +253,7 @@ def main(seasons, competitions):
                         st.download_button(
                             label="Download plot",
                             data=file,
-                            file_name="plot.png",
+                            file_name="skillcorner_plot.png",
                             mime="image/png")
 
                     st.pyplot(fig)
@@ -306,6 +310,9 @@ def main(seasons, competitions):
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info, x=0, y=-0.125)
 
+                    # Load the image for the watermark
+                    st_utils.add_user_logo(ax, 'bar')
+
                     fig.savefig('output/plot.png',
                                 format='png',
                                 dpi=300,
@@ -315,7 +322,7 @@ def main(seasons, competitions):
                         st.download_button(
                             label="Download plot",
                             data=file,
-                            file_name="plot.png",
+                            file_name="skillcorner_plot.png",
                             mime="image/png")
 
                     st.pyplot(fig)
@@ -379,6 +386,9 @@ def main(seasons, competitions):
                                                       " | " + str(len(edited_df)) + " datapoints in sample",
                                                       x=0, y=-0.05,
                                                       fontsize=7)
+
+                    # Load the image for the watermark
+                    st_utils.add_user_logo(ax, 'table')
 
                     fig.savefig('output/plot.png',
                                 format='png',
