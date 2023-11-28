@@ -523,7 +523,7 @@ def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, seconda
 
 
 def add_user_logo(ax, chart_type):
-    watermark_img = mpimg.imread(st.secrets['WATERMARK_IMAGE_PATH'])
+    watermark_img = mpimg.imread(st.secrets.WATERMARK_IMAGE_PATH)
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
 

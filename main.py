@@ -14,7 +14,7 @@ hide_menu_style = """
          """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-st.sidebar.image(st.secrets['LOGO_IMAGE_PATH'])
+st.sidebar.image(st.secrets.LOGO_IMAGE_PATH)
 hide_img_fs = '''
 <style>
 button[title="View fullscreen"]{
