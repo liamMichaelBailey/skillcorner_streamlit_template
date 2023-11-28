@@ -20,7 +20,7 @@ import pandas as pd
 
 def get_competition_editions(username, password):
     headers = {
-        'Referer': 'PSG Visualisation Tool',
+        'Referer': 'Scouted Visualisation Tool',
         'Username': username,
     }
     request_string_competition_editions = 'https://skillcorner.com/api/competition_editions/?user=true&limit=1000'
