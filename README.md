@@ -7,8 +7,10 @@
 4. Update auth Referer in secrets file
 5. Upload to GitHub
 6. Test on local version
-7. Deploy to Streamlit cloud
-8. Share with client
+7. Set up query to monitor usage
+8. Deploy to Streamlit cloud
+9. Add secrets to Streamlit cloud & update url
+10. Share with client
 
 ### Initial client communication:
 
