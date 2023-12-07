@@ -236,10 +236,6 @@ def main(seasons, competitions):
                                                    regression_line=show_regression_line,
                                                    data_point_id='data_point_id')
 
-                    # Setting background color to Scouted preference.
-                    fig.patch.set_facecolor('#F5F5F5')
-                    ax.set_facecolor('#F5F5F5')
-
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info +
                                                       " | " + str(len(edited_df)) + " datapoints in sample",
@@ -310,10 +306,6 @@ def main(seasons, competitions):
                                                  vertical=orientation,
                                                  data_point_id='data_point_id',
                                                  fontsize=fontsize)
-
-                    # Setting background color to Scouted preference.
-                    fig.patch.set_facecolor('#F5F5F5')
-                    ax.set_facecolor('#F5F5F5')
 
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info, x=0, y=-0.125)
@@ -388,10 +380,6 @@ def main(seasons, competitions):
                                                            percentiles_mode=True,
                                                            rotate_column_names=rotate_column_names,
                                                            mode=display)
-
-                    # Setting background color to Scouted preference.
-                    fig.patch.set_facecolor('#F5F5F5')
-                    ax.set_facecolor('#F5F5F5')
 
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info +
