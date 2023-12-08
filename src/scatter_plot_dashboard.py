@@ -286,7 +286,7 @@ def main(seasons, competitions):
                 with st.spinner('Plotting data...'):
 
                     # Ensure sample is smaller than 40 data points so plot is readable.
-                    edited_df = st_utils.bar_chart_sample_filter(edited_df, metric,
+                    edited_df = st_utils.bar_chart_sample_filter(edited_df, st.session_state.metric_mappings[metric],
                                                                  primary_highlight_points, secondary_highlight_points)
 
                     # Scale text to sample size.
