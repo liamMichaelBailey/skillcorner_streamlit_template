@@ -14,8 +14,6 @@ from skillcorner_analysis_lib.src.request_handlers.physical_requests import Phys
 from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, \
     bar_plot as bar, summary_table as table
 from streamlit_option_menu import option_menu
-import pandas as pd
-
 
 def main(seasons, competitions):
     # Data request params.
@@ -56,76 +54,55 @@ def main(seasons, competitions):
                     requests = GameIntelligenceRequests(username=st.session_state.username,
                                                         password=st.session_state.password)
 
-                    st.session_state.df = pd.DataFrame()
-                    for season in st.session_state.inputs['selected_season_ids'].split(','):
-                        st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='off_ball_runs',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
-                                                        ignore_index=True)
+                    st.session_state.df = \
+                        requests.standard_request(endpoint='off_ball_runs',
+                                                  season_id=st.session_state.inputs['selected_season_ids'],
+                                                  competition_ids=st.session_state.inputs['selected_competition_ids'],
+                                                  matches=st.session_state.inputs['matches'],
+                                                  minutes=st.session_state.inputs['minutes'],
+                                                  group_by=st.session_state.inputs['split_by_str'])
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Passing':
                     requests = GameIntelligenceRequests(username=st.session_state.username,
                                                         password=st.session_state.password)
-                    st.session_state.df = pd.DataFrame()
-                    for season in st.session_state.inputs['selected_season_ids'].split(','):
-                        st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='passes',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
-                                                        ignore_index=True)
+                    st.session_state.df = \
+                        requests.standard_request(endpoint='passes',
+                                                  season_id=st.session_state.inputs['selected_season_ids'],
+                                                  competition_ids=st.session_state.inputs['selected_competition_ids'],
+                                                  matches=st.session_state.inputs['matches'],
+                                                  minutes=st.session_state.inputs['minutes'],
+                                                  group_by=st.session_state.inputs['split_by_str'])
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Dealing with pressure':
                     requests = GameIntelligenceRequests(username=st.session_state.username,
                                                         password=st.session_state.password)
-                    st.session_state.df = pd.DataFrame()
-                    for season in st.session_state.inputs['selected_season_ids'].split(','):
-                        st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='on_ball_pressures',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
-                                                        ignore_index=True)
+                    st.session_state.df = \
+                        requests.standard_request(endpoint='on_ball_pressures',
+                                                  season_id=st.session_state.inputs['selected_season_ids'],
+                                                  competition_ids=st.session_state.inputs['selected_competition_ids'],
+                                                  matches=st.session_state.inputs['matches'],
+                                                  minutes=st.session_state.inputs['minutes'],
+                                                  group_by=st.session_state.inputs['split_by_str'])
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Physical':
                     requests = PhysicalRequests(username=st.session_state.username,
                                                 password=st.session_state.password)
-                    st.session_state.df = pd.DataFrame()
-                    for season in st.session_state.inputs['selected_season_ids'].split(','):
-                        st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(season_id=season,
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   average='false',
-                                                                                   group_by='player,match')],
-                                                        ignore_index=True)
+                    st.session_state.df = \
+                        requests.standard_request(season_id=st.session_state.inputs['selected_season_ids'],
+                                                  competition_ids=st.session_state.inputs['selected_competition_ids'],
+                                                  matches=st.session_state.inputs['matches'],
+                                                  minutes=st.session_state.inputs['minutes'],
+                                                  group_by=st.session_state.inputs['split_by_str'],
+                                                  average='false')
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
                     st.session_state.df['minutes_played_per_match'] = st.session_state.df['Minutes']
-
                 if 'competition_id' in list(st.session_state.df.columns):
                     mapping = dict(competitions[['id', 'full_name']].values)
                     st.session_state.df['competition_name'] = st.session_state.df['competition_id'].map(mapping)
