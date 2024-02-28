@@ -175,9 +175,14 @@ def main(seasons, competitions):
                                  icons=['graph-up', 'bar-chart-line-fill', 'table'],
                                  default_index=0, orientation="horizontal")
 
-        sample_info = "Competitions: " + ", ".join(st.session_state.inputs['competition_selection']) + \
-                      " | Seasons: " + ", ".join(st.session_state.inputs['season_selection']) + \
-                      " | Minimum " + str(match_count) + " matches of " + str(minutes) + " minutes in duration"
+        if 'player_name' in grouped_data.columns:
+            sample_info = "Competitions: " + ", ".join(st.session_state.inputs['competition_selection']) + \
+                          " | Seasons: " + ", ".join(st.session_state.inputs['season_selection']) + \
+                          " | Minimum " + str(match_count) + " matches of " + str(minutes) + " minutes in duration"
+        else:
+            sample_info = "Competitions: " + ", ".join(st.session_state.inputs['competition_selection']) + \
+                          " | Seasons: " + ", ".join(st.session_state.inputs['season_selection']) + \
+                          " | Performances of at least " + str(minutes) + " minutes in duration"
 
         st.session_state.metric_mappings = \
             {st.session_state.metrics[i].replace('_', ' ').title(): st.session_state.metrics[i]
