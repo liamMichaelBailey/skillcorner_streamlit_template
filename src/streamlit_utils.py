@@ -446,7 +446,10 @@ def group_match_by_match_data_ui(match_by_match_df,
             if any(substring in item for substring in specified_substrings):
                 filtered_list.append(item)
 
-        filtered_list.remove("Top 5 PSV-99")
+        try :
+            filtered_list.remove("Top 5 PSV-99")
+        except :
+            pass
         st.session_state.metrics = filtered_list
         st.session_state.units = [None, 'm', 'km/h']
 
