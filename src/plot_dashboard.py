@@ -7,12 +7,11 @@ This page should allow for the building of simple standard skillcorner plots.
 from src import streamlit_utils as st_utils
 import streamlit as st
 from src import streamlit_utils as streamlit_utils
-from skillcorner_analysis_lib.src.request_handlers.game_intelligence_requests import GameIntelligenceRequests
-from skillcorner_analysis_lib.src.request_handlers.physical_requests import PhysicalRequests
-from skillcorner_analysis_lib.src.utils import constants
-from skillcorner_analysis_lib.src.utils.skillcorner_utils import split_string_with_new_line
-from skillcorner_analysis_lib.src.standard_plots import scatter_plot as scatter, \
-    bar_plot as bar, summary_table as table,radar_plot as radar
+from skillcorner.client import SkillcornerClient
+import constants
+from skillcornerviz.utils.skillcorner_utils import split_string_with_new_line
+from skillcornerviz.standard_plots import scatter_plot as scatter, \
+    bar_plot as bar, summary_table as table, radar_plot as radar
 from streamlit_option_menu import option_menu
 import pandas as pd
 from src import usage_monitoring
@@ -54,74 +53,69 @@ def main(seasons, competitions):
             with st.spinner('Requesting data from API...'):
                 # Requesting Data from api
                 if st.session_state.endpoint == 'Off-ball runs':
-                    requests = GameIntelligenceRequests(username=st.session_state.username,
-                                                        password=st.session_state.password)
+                    client = SkillcornerClient(username=st.session_state.username,
+                                               password=st.session_state.password)
 
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='off_ball_runs',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
-                                                        ignore_index=True)
+                                                         client.get_in_possession_off_ball_runs(params={
+                                                             'competition': st.session_state.inputs[
+                                                                 'selected_competition_ids'],
+                                                             'season': season,
+                                                             'playing_time__gte': 30,
+                                                             'group_by': ['player', 'match']
+                                                         }
+                                                         )
+                                                         ], ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Passing':
-                    requests = GameIntelligenceRequests(username=st.session_state.username,
-                                                        password=st.session_state.password)
+                    client = SkillcornerClient(username=st.session_state.username,
+                                               password=st.session_state.password)
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='passes',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
+                                                         client.get_in_possession_passes(params={
+                                                             'competition': st.session_state.inputs[
+                                                                 'selected_competition_ids'],
+                                                             'season': season,
+                                                             'playing_time__gte': 30,
+                                                             'group_by': ['player', 'match']})],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Dealing with pressure':
-                    requests = GameIntelligenceRequests(username=st.session_state.username,
-                                                        password=st.session_state.password)
+                    client = SkillcornerClient(username=st.session_state.username,
+                                               password=st.session_state.password)
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(endpoint='on_ball_pressures',
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   season_id=season,
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   group_by='player,match')],
+                                                         client.get_in_possession_on_ball_pressures(params={
+                                                             'competition': st.session_state.inputs[
+                                                                 'selected_competition_ids'],
+                                                             'season': season,
+                                                             'playing_time__gte': 30,
+                                                             'group_by': ['player', 'match']}
+                                                         )],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 if st.session_state.endpoint == 'Physical':
-                    requests = PhysicalRequests(username=st.session_state.username,
-                                                        password=st.session_state.password)
+                    client = SkillcornerClient(username=st.session_state.username,
+                                               password=st.session_state.password)
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         requests.standard_request(season_id=season,
-                                                                                   competition_ids=
-                                                                                   st.session_state.inputs[
-                                                                                       'selected_competition_ids'],
-                                                                                   matches=0,
-                                                                                   minutes=30,
-                                                                                   average='false',
-                                                                                   group_by='player,match')],
+                                                         client.get_physical(params={'season': season,
+                                                                                     'competition':
+                                                                                         st.session_state.inputs[
+                                                                                             'selected_competition_ids'],
+                                                                                     'playing_time__gte': 30,
+                                                                                     'group_by': ['player', 'match']})],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
@@ -174,7 +168,7 @@ def main(seasons, competitions):
 
         # 2. horizontal menu
         chart_type = option_menu(None, ['Scatter Plot', 'Bar Chart', 'Table', 'Radar'],
-                                 icons=['graph-up', 'bar-chart-line-fill', 'table','radioactive'],
+                                 icons=['graph-up', 'bar-chart-line-fill', 'table', 'radioactive'],
                                  default_index=0, orientation="horizontal")
 
         if 'player_name' in grouped_data.columns:
@@ -423,15 +417,15 @@ def main(seasons, competitions):
                         display = 'none'
 
                     fig, ax = table.plot_summary_table(df=edited_df,
-                                                           metrics=[st.session_state.metric_mappings[m]
-                                                                    for m in metrics],
-                                                           metric_col_names=metric_name_updates,
-                                                           highlight_group=data_points,
-                                                           data_point_label=data_point_label,
-                                                           data_point_id='data_point_id',
-                                                           percentiles_mode=True,
-                                                           rotate_column_names=rotate_column_names,
-                                                           mode=display)
+                                                       metrics=[st.session_state.metric_mappings[m]
+                                                                for m in metrics],
+                                                       metric_col_names=metric_name_updates,
+                                                       highlight_group=data_points,
+                                                       data_point_label=data_point_label,
+                                                       data_point_id='data_point_id',
+                                                       percentiles_mode=True,
+                                                       rotate_column_names=rotate_column_names,
+                                                       mode=display)
 
                     if add_sample_info == True:
                         ax = st_utils.add_plot_sample(ax, sample_info +
@@ -498,9 +492,9 @@ def main(seasons, competitions):
                                         'Difficult Pass Attempts']))
                 suffix = [' p30 TIP', ' p30 TIP', '%', '%', ' p30 TIP', ' p30 TIP']
 
-
-            if compact_labels==True :
-                radar_metrics_labels = {label: split_string_with_new_line(name) for label, name in radar_metrics_labels.items()}
+            if compact_labels == True:
+                radar_metrics_labels = {label: split_string_with_new_line(name) for label, name in
+                                        radar_metrics_labels.items()}
 
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
@@ -519,21 +513,21 @@ def main(seasons, competitions):
                             player != None else 'Profile')
 
                         fig, ax = radar.plot_radar(df=edited_df,
-                                                        label=player,
-                                                        metrics=radar_metrics,
-                                                        metric_labels=radar_metrics_labels,
-                                                        plot_title=plot_title,
-                                                        add_sample_info=add_plot_info,
-                                                        positions=position_text,
-                                                        seasons=season_text,
-                                                        minutes=minutes,
-                                                        matches=match_count,
-                                                        competitions=competition_texts,
-                                                        filter_relevant=filter_relevant,
-                                                        percentiles_precalculated=False,
-                                                        text_multiplier=1.45,
-                                                        suffix=suffix,
-                                                        data_point_id='data_point_id')
+                                                   label=player,
+                                                   metrics=radar_metrics,
+                                                   metric_labels=radar_metrics_labels,
+                                                   plot_title=plot_title,
+                                                   add_sample_info=add_plot_info,
+                                                   positions=position_text,
+                                                   seasons=season_text,
+                                                   minutes=minutes,
+                                                   matches=match_count,
+                                                   competitions=competition_texts,
+                                                   filter_relevant=filter_relevant,
+                                                   percentiles_precalculated=False,
+                                                   text_multiplier=1.45,
+                                                   suffix=suffix,
+                                                   data_point_id='data_point_id')
 
                         st.pyplot(fig)
 

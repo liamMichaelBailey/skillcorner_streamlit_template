@@ -9,14 +9,12 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 from pandas.api.types import (
-    is_categorical_dtype,
     is_datetime64_any_dtype,
     is_numeric_dtype,
     is_object_dtype,
 )
 from streamlit_image_select import image_select
-from skillcorner_analysis_lib.src.utils.constants import FEMALE_COMPETITION_IDS
-from skillcorner_analysis_lib.src.utils import skillcorner_utils as skc_utils, \
+from skillcornerviz.utils import skillcorner_utils as skc_utils, \
     skillcorner_game_intelligence_utils as gi_utils, skillcorner_physical_utils as phy_utils
 import matplotlib.image as mpimg
 from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
@@ -44,6 +42,79 @@ def get_meta_data():
     position_roles = json.load(open('resources/data/position_roles.json'))
 
     return seasons, competitions, position_groups, position_roles
+
+
+def get_id_from_selection(df, column, selection):
+    """
+    Retrieves the ID from a DataFrame based on a specific selection in a column.
+
+    Args:
+        df (pandas.DataFrame): DataFrame to search.
+        column (str): Column name.
+        selection: Selected value.
+
+    Returns:
+        id: ID corresponding to the selection.
+    """
+    id = df[df[column] == selection]['id'].iloc[0]
+    return id
+
+
+def add_playing_under_pressure_normalisations(df):
+    intensities = ['', '_low', '_medium', '_high']
+
+    metrics = []
+
+    df, per_90_metrics = gi_utils.add_per_90_metrics(df)
+    metrics += per_90_metrics
+
+    df, per_30_tip_metrics = gi_utils.add_per_30_tip_metrics(df)
+    metrics += per_30_tip_metrics
+
+    for i in intensities:
+        df['ball_retention_ratio_under' + i + '_pressure'] = \
+            (df['count_ball_retentions_under' + i + '_pressure_per_match'] /
+             df['count' + i + '_pressures_received_per_match']) * 100
+
+        metrics.append('ball_retention_ratio_under' + i + '_pressure')
+
+        df['count_dangerous_pass_attempts_under' + i + '_pressure_per_100_pressures'] = \
+            (df['count_dangerous_pass_attempts_under' + i + '_pressure_per_match'] /
+             (df['count' + i + '_pressures_received_per_match'] / 100))
+
+        metrics.append('count_dangerous_pass_attempts_under' + i + '_pressure_per_100_pressures')
+
+        df['count_completed_dangerous_passes_under' + i + '_pressure_per_100_pressures'] = \
+            (df['count_completed_dangerous_passes_under' + i + '_pressure_per_match'] /
+             (df['count' + i + '_pressures_received_per_match'] / 100))
+
+        metrics.append('count_completed_dangerous_passes_under' + i + '_pressure_per_100_pressures')
+
+        df['dangerous_pass_completion_ratio_under' + i + '_pressure'] = \
+            (df['count_completed_dangerous_passes_under' + i + '_pressure_per_90'] /
+             df['count_dangerous_pass_attempts_under' + i + '_pressure_per_90']) * 100
+
+        metrics.append('dangerous_pass_completion_ratio_under' + i + '_pressure')
+
+        df['count_difficult_pass_attempts_under' + i + '_pressure_per_100_pressures'] = \
+            (df['count_difficult_pass_attempts_under' + i + '_pressure_per_match'] /
+             (df['count' + i + '_pressures_received_per_match'] / 100))
+
+        metrics.append('count_difficult_pass_attempts_under' + i + '_pressure_per_100_pressures')
+
+        df['count_completed_difficult_passes_under' + i + '_pressure_per_100_pressures'] = \
+            (df['count_completed_difficult_passes_under' + i + '_pressure_per_match'] /
+             (df['count' + i + '_pressures_received_per_match'] / 100))
+
+        metrics.append('count_completed_difficult_passes_under' + i + '_pressure_per_100_pressures')
+
+        df['difficult_pass_completion_ratio_under' + i + '_pressure'] = \
+            (df['count_completed_difficult_passes_under' + i + '_pressure_per_90'] /
+             df['count_difficult_pass_attempts_under' + i + '_pressure_per_90']) * 100
+
+        metrics.append('difficult_pass_completion_ratio_under' + i + '_pressure')
+
+    return metrics
 
 
 def add_logo():
@@ -134,7 +205,7 @@ def filter_dataframe(df: pd.DataFrame, columns) -> pd.DataFrame:
                     user_date_input = tuple(map(pd.to_datetime, user_date_input))
                     start_date, end_date = user_date_input
                     df = df.loc[df[column].between(start_date, end_date)]
-            elif is_categorical_dtype(df[column]) or df[column].nunique() < 1000:
+            elif isinstance(df[column].dtype, pd.CategoricalDtype) or df[column].nunique() < 1000:
                 user_cat_input = right.multiselect(
                     f"Values for {column}",
                     df[column].unique(),
@@ -281,11 +352,6 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
                              ['Male', 'Female'],
                              horizontal=True)
 
-    if gender_filter == 'Male':
-        competitions = competitions[~competitions['id'].isin(FEMALE_COMPETITION_IDS)]
-    if gender_filter == 'Female':
-        competitions = competitions[competitions['id'].isin(FEMALE_COMPETITION_IDS)]
-
     if competitions is not None:
         if competition_limit is None:
             container = st.container()
@@ -345,17 +411,17 @@ def parse_standard_user_inputs(inputs, seasons, competitions):
         inputs: Modified dictionary with parsed values
     """
     if 'season_selection' in inputs:
-        inputs['selected_season_ids'] = [skc_utils.get_id_from_selection(seasons,
-                                                                         'name',
-                                                                         season)
+        inputs['selected_season_ids'] = [get_id_from_selection(seasons,
+                                                               'name',
+                                                               season)
                                          for season in inputs['season_selection']]
         inputs['selected_season_ids'] = [str(i) for i in inputs['selected_season_ids']]
         inputs['selected_season_ids'] = ",".join(inputs['selected_season_ids'])
 
     if 'competition_selection' in inputs:
-        inputs['selected_competition_ids'] = [skc_utils.get_id_from_selection(competitions,
-                                                                              'full_name',
-                                                                              competition)
+        inputs['selected_competition_ids'] = [get_id_from_selection(competitions,
+                                                                    'full_name',
+                                                                    competition)
                                               for competition in inputs['competition_selection']]
 
     if 'split_by' in inputs:
@@ -425,13 +491,13 @@ def group_match_by_match_data_ui(match_by_match_df,
     df = df[df['count_match'] >= match_count]
 
     if endpoint == 'Off-ball runs':
-        st.session_state.metrics = gi_utils.add_run_normalisations(df, add_p90=False)
+        st.session_state.metrics = gi_utils.add_run_normalisations(df)
         st.session_state.units = [None, '%']
     if endpoint == 'Passing':
-        st.session_state.metrics = gi_utils.add_pass_normalisations(df, add_p90=False)
+        st.session_state.metrics = gi_utils.add_pass_normalisations(df)
         st.session_state.units = [None, '%']
     if endpoint == 'Dealing with pressure':
-        st.session_state.metrics = gi_utils.add_playing_under_pressure_normalisations(df, add_p90=False)
+        st.session_state.metrics = add_playing_under_pressure_normalisations(df)
         st.session_state.units = [None, '%']
     if endpoint == 'Physical':
         st.session_state.metrics = phy_utils.add_standard_metrics(df)
@@ -446,9 +512,9 @@ def group_match_by_match_data_ui(match_by_match_df,
             if any(substring in item for substring in specified_substrings):
                 filtered_list.append(item)
 
-        try :
+        try:
             filtered_list.remove("Top 5 PSV-99")
-        except :
+        except:
             pass
         st.session_state.metrics = filtered_list
         st.session_state.units = [None, 'm', 'km/h']
@@ -551,3 +617,8 @@ def add_user_logo(ax, chart_type):
     ax.add_artist(ab)
 
     return ax
+
+
+# Constants
+
+
