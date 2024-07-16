@@ -485,7 +485,7 @@ def group_match_by_match_data_ui(match_by_match_df,
     match_count = group_col2.slider('Minimum matches:', matches_range[0], matches_range[1], 8, step=1)
 
     df = match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
-        grouping_conditions).mean().reset_index()
+        grouping_conditions).mean(numeric_only=True).reset_index()
     df['count_match'] = list(match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
         grouping_conditions).size())
     df = df[df['count_match'] >= match_count]

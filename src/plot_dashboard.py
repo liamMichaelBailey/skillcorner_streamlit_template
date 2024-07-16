@@ -8,7 +8,7 @@ from src import streamlit_utils as st_utils
 import streamlit as st
 from src import streamlit_utils as streamlit_utils
 from skillcorner.client import SkillcornerClient
-import constants
+from src import constants
 from skillcornerviz.utils.skillcorner_utils import split_string_with_new_line
 from skillcornerviz.standard_plots import scatter_plot as scatter, \
     bar_plot as bar, summary_table as table, radar_plot as radar
@@ -109,13 +109,14 @@ def main(seasons, competitions):
                                                password=st.session_state.password)
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
+                        season_df = pd.DataFrame(client.get_physical(params={'season': season,
+                                                                             'competition':
+                                                                                 st.session_state.inputs[
+                                                                                     'selected_competition_ids'],
+                                                                             'playing_time__gte': 30,
+                                                                             'group_by': ['player', 'match']}))
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         client.get_physical(params={'season': season,
-                                                                                     'competition':
-                                                                                         st.session_state.inputs[
-                                                                                             'selected_competition_ids'],
-                                                                                     'playing_time__gte': 30,
-                                                                                     'group_by': ['player', 'match']})],
+                                                         season_df],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
