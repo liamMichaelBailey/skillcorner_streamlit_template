@@ -61,6 +61,15 @@ def get_id_from_selection(df, column, selection):
 
 
 def add_playing_under_pressure_normalisations(df):
+    """
+        Adds the normalisations for playing under pressure on an existing DataFrame.
+
+        Args:
+            df (pandas.DataFrame): DataFrame to add the normalisations to.
+
+        Returns:
+            list (metrics): A list of metrics that have been added to the df
+        """
     intensities = ['', '_low', '_medium', '_high']
 
     metrics = []
@@ -71,6 +80,7 @@ def add_playing_under_pressure_normalisations(df):
     df, per_30_tip_metrics = gi_utils.add_per_30_tip_metrics(df)
     metrics += per_30_tip_metrics
 
+    # Calculates different metrics and adds them to both the DataFrame and the metrics list.
     for i in intensities:
         df['ball_retention_ratio_under' + i + '_pressure'] = \
             (df['count_ball_retentions_under' + i + '_pressure_per_match'] /
@@ -137,14 +147,24 @@ def add_logo():
         unsafe_allow_html=True)
 
 
-def get_filter_columns(df: pd.DataFrame):
-    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'season_name', 'position', 'group',
-                      'count_match']
+def get_filter_columns(df):
+    """
+    Retrieves a list of columns from the DataFrame that are relevant for filtering.
+    Args:
+        df (pandas.DataFrame): The DataFrame to extract filter columns from.
 
+    Returns:
+        list: A list of column names that are present in the DataFrame and relevant for filtering.
+    """
+    # Predefined list of filter columns
+    filter_columns = ['player_birthdate', 'team_name', 'competition_name', 'season_name', 'position', 'group', 'count_match']
+
+    # Find columns in the DataFrame that include 'in_sample' in their name
     in_sample_cols = [x for x in list(df.columns) if 'in_sample' in x]
 
     filter_columns = filter_columns + in_sample_cols
 
+    # Return only those columns that are actually present in the DataFrames' columns
     return [x for x in filter_columns if x in list(df.columns)]
 
 
@@ -252,7 +272,7 @@ def process_fig(fig, name, width=800, show=True):
                 format='png',
                 dpi=300,
                 bbox_inches='tight')
-    if show == True:
+    if show:
         image = Image.open('output/' + name + '.png')
         st.image(image,
                  width=width)
@@ -274,7 +294,7 @@ def display_fig(name, width=800, show=True):
         show: Whether to display the image or not
     """
     path = 'output/' + name + '.png'
-    if show == True:
+    if show:
         image = Image.open('output/' + name + '.png')
         st.image(image,
                  width=width)
@@ -332,26 +352,26 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
                                   competition_limit=None):
     """
     Creates a standard data input interface for selecting seasons, competitions, playing time, and split options.
+
     Args:
-        seasons: DataFrame containing season information
-        competitions: DataFrame containing competition information
-        playing_time: Whether to include playing time options or not
-        split_by_options: List of split options
-        competition_limit: number to limit competition selection by
+        seasons: DataFrame containing season information.
+        competitions: DataFrame containing competition information.
+        playing_time: Whether to include playing time options or not.
+        split_by_options: List of split options.
+        competition_limit: Number to limit competition selection by.
+
     Returns:
-        inputs: Dictionary containing the selected input values
+        inputs: Dictionary containing the selected input values.
     """
     inputs = {}
 
+    # If seasons data is provided, create a multiselect for seasons
     if seasons is not None:
         default_season = ('2023/2024' if '2023/2024' in list(seasons['name']) else None)
         season_selection = st.multiselect('Seasons:', seasons['name'], default_season)
         inputs['season_selection'] = season_selection
 
-    gender_filter = st.radio('Competitions: ',
-                             ['Male', 'Female'],
-                             horizontal=True)
-
+    # If competitions data is provided, create a selection interface
     if competitions is not None:
         if competition_limit is None:
             container = st.container()
@@ -387,13 +407,13 @@ def standard_data_input_interface(seasons=None, competitions=None, playing_time=
 
             inputs['competition_selection'] = competition_selection
 
+    # If playing time is to be included, create sliders for minimum minutes and matches
     if playing_time:
         playing_time_col1, playing_time_col2 = st.columns(2)
-
         inputs['minutes'] = playing_time_col1.slider('Minimum minutes:', 0, 90, 60, step=5)
-
         inputs['matches'] = playing_time_col2.slider('Minimum matches:', 0, 20, 8, step=1)
 
+    # If split options are provided, create a multiselect for those options
     if split_by_options is not None:
         default_split_by = (
             ['player', 'team', 'position'] if {'player', 'team', 'position'}.issubset(set(split_by_options)) else None)
@@ -407,6 +427,8 @@ def parse_standard_user_inputs(inputs, seasons, competitions):
     Parses the selected input values into the desired format.
     Args:
         inputs: Dictionary containing the selected input values
+        seasons: The seasons that the user has chosen
+        competitions: The competitions that the user has chosen
     Returns:
         inputs: Modified dictionary with parsed values
     """
@@ -432,32 +454,40 @@ def parse_standard_user_inputs(inputs, seasons, competitions):
 
 
 def standard_position_filtering_interface(df, split_by_options):
+    """
+    Filters the DataFrame based on the selected positions for comparison.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame to filter.
+        split_by_options (list): List of options to determine the filtering criteria ('group' or 'position').
+
+    Returns:
+        tuple: A tuple containing the filtered DataFrame and the selected positions.
+    """
+    # Check if filtering by group without position
     if 'group' in split_by_options and 'position' not in split_by_options:
-        default_group = (
-            ['Forward'] if 'Forward' in df['group'].unique() else None)
-        position_selection = st.multiselect('Positions to compare:',
-                                            df['group'].unique(),
-                                            default_group)
+        default_group = ['Forward'] if 'Forward' in df['group'].unique() else None
+        # User selects positions based on groups
+        position_selection = st.multiselect('Positions to compare:', df['group'].unique(), default_group)
         filtered_df = df[df['group'].isin(position_selection)]
 
+    # Check if filtering by position without group
     elif 'position' in split_by_options and 'group' not in split_by_options:
-        default_group = (
-            ['LF', 'CF', 'RF'] if {'LF', 'CF', 'RF'}.issubset(set(df['position'].unique())) else None)
-        position_selection = st.multiselect('Positions to compare:',
-                                            df['position'].unique(),
-                                            default_group)
+        default_group = ['LF', 'CF', 'RF'] if {'LF', 'CF', 'RF'}.issubset(set(df['position'].unique())) else None
+        # User selects positions directly
+        position_selection = st.multiselect('Positions to compare:', df['position'].unique(), default_group)
         filtered_df = df[df['position'].isin(position_selection)]
 
+    # Filtering by both position and group
     elif 'position' in split_by_options and 'group' in split_by_options:
-        default_group = (
-            ['LF', 'CF', 'RF'] if {'LF', 'CF', 'RF'}.issubset(set(df['position'].unique())) else None)
-        position_selection = st.multiselect('Positions to compare:',
-                                            df['position'].unique(),
-                                            default_group)
+        default_group = ['LF', 'CF', 'RF'] if {'LF', 'CF', 'RF'}.issubset(set(df['position'].unique())) else None
+        position_selection = st.multiselect('Positions to compare:', df['position'].unique(), default_group)
         filtered_df = df[df['position'].isin(position_selection)]
+
+    # No filtering criteria provided
     else:
         position_selection = ['']
-        filtered_df = df
+        filtered_df = df  # Return the original DataFrame
 
     return filtered_df, position_selection
 
@@ -467,65 +497,85 @@ def group_match_by_match_data_ui(match_by_match_df,
                                  grouping_options=None,
                                  minutes_range=(0, 90),
                                  matches_range=(0, 20)):
+    """
+    Groups match-by-match data based on user-selected options and calculates metrics.
+
+    Args:
+        match_by_match_df (pandas.DataFrame): DataFrame containing match data.
+        endpoint (str): Specific endpoint to determine metrics to add.
+        grouping_options (list, optional): List of options for grouping data.
+        minutes_range (tuple): Range for minimum minutes played filter.
+        matches_range (tuple): Range for minimum matches filter.
+
+    Returns:
+        tuple: A tuple containing the grouped DataFrame, selected minutes, and match count.
+    """
+    # Default grouping options if none are provided
     if grouping_options is None:
         grouping_options = ['player', 'team', 'competition', 'season', 'group', 'position']
 
     group_col1, group_col2 = st.columns(2)
-    grouping_conditions = \
-        st.multiselect('Group data by:',
-                       grouping_options,
-                       ['player', 'team', 'group'])
+    # User selects grouping conditions for the data
+    grouping_conditions = st.multiselect('Group data by:', grouping_options, ['player', 'team', 'group'])
 
+    # Adjust grouping conditions for specific column names
     grouping_conditions = [s + '_name' if s not in ['position', 'group'] else s for s in grouping_conditions]
 
+    # Include additional player-specific columns if player is selected
     if 'player_name' in grouping_conditions:
         grouping_conditions += ['player_birthdate', 'short_name']
 
+    # User selects minimum minutes and matches through sliders
     minutes = group_col1.slider('Minimum minutes:', minutes_range[0], minutes_range[1], 60, step=5)
     match_count = group_col2.slider('Minimum matches:', matches_range[0], matches_range[1], 8, step=1)
 
+    # Group by selected conditions and calculate mean
     df = match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
         grouping_conditions).mean(numeric_only=True).reset_index()
+
+    # Count the number of matches for each group
     df['count_match'] = list(match_by_match_df[match_by_match_df['minutes_played_per_match'] > minutes].groupby(
         grouping_conditions).size())
+
+    # Filter based on the minimum match count
     df = df[df['count_match'] >= match_count]
 
+    # Add specific metrics based on the endpoint
     if endpoint == 'Off-ball runs':
         st.session_state.metrics = gi_utils.add_run_normalisations(df)
         st.session_state.units = [None, '%']
-    if endpoint == 'Passing':
+    elif endpoint == 'Passing':
         st.session_state.metrics = gi_utils.add_pass_normalisations(df)
         st.session_state.units = [None, '%']
-    if endpoint == 'Dealing with pressure':
+    elif endpoint == 'Dealing with pressure':
         st.session_state.metrics = add_playing_under_pressure_normalisations(df)
         st.session_state.units = [None, '%']
-    if endpoint == 'Physical':
+    elif endpoint == 'Physical':
         st.session_state.metrics = phy_utils.add_standard_metrics(df)
-        # List of specified substrings
+        # Filter metrics based on specified substrings
         specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute",
                                 'Distance per Sprint']
-        filtered_list = []
+        filtered_list = [item for item in st.session_state.metrics if
+                         any(substring in item for substring in specified_substrings)]
 
-        # Iterate through the original list
-        for item in st.session_state.metrics:
-            # Check if any of the specified substrings are present in the item
-            if any(substring in item for substring in specified_substrings):
-                filtered_list.append(item)
-
+        # Remove specific metric if present
         try:
             filtered_list.remove("Top 5 PSV-99")
-        except:
+        except ValueError:
             pass
+
         st.session_state.metrics = filtered_list
         st.session_state.units = [None, 'm', 'km/h']
 
+    # Scale 'in_sample' metrics by match count
     for column in df.columns:
         if 'in_sample' in column:
             df[column] = df[column] * df['count_match']
 
-    skc_utils.add_data_point_id(df,
-                                grouping_conditions)
+    # Add data point IDs based on grouping conditions
+    skc_utils.add_data_point_id(df, grouping_conditions)
 
+    # Reorder 'data_point_id' to be the first column
     first_column = df.pop('data_point_id')
     df.insert(0, 'data_point_id', first_column)
 
@@ -533,6 +583,16 @@ def group_match_by_match_data_ui(match_by_match_df,
 
 
 def get_chart_label_options(df):
+    """
+        Gets the labeling options for a DataFrame, by scanning through each column
+
+    Args:
+        df: The DataFrame to get the label options from
+
+    Returns:
+        list: A list containing the possible labeling options.
+
+    """
     if 'player_name' in df.columns:
         return ['player_name', 'short_name']
     elif 'team_name' in df.columns:
@@ -568,10 +628,25 @@ def get_axis_unit(metric):
 
 def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, secondary_highlight_points,
                             max_data_points=40):
+    """
+    Filters a DataFrame for bar chart plotting, limiting the number of data points to a maximum.
+
+    Args:
+        edited_df (pandas.DataFrame): DataFrame containing the data to be plotted.
+        metric (str): The metric used to rank the data points.
+        primary_highlight_points (list): List of primary highlight data point IDs.
+        secondary_highlight_points (list): List of secondary highlight data point IDs.
+        max_data_points (int): Maximum number of data points to include in the plot.
+
+    Returns:
+        pandas.DataFrame: Filtered DataFrame with a limited number of data points.
+    """
+    # Check if the number of data points exceeds the maximum allowed
     if len(edited_df) > max_data_points:
         number_of_highlights = \
             max_data_points - len(primary_highlight_points + secondary_highlight_points)
 
+        # Filter the DataFrame to include highlighted points and the top-ranked data points
         edited_df = \
             edited_df[(edited_df['data_point_id'].isin(primary_highlight_points)) |
                       (edited_df['data_point_id'].isin(secondary_highlight_points)) |
@@ -579,6 +654,7 @@ def bar_chart_sample_filter(edited_df, metric, primary_highlight_points, seconda
                           primary_highlight_points + secondary_highlight_points)].nlargest(
                           number_of_highlights, metric)['data_point_id']))]
 
+        # Warn the user about the data point limitation
         st.warning('Warning: over ' + str(max_data_points) + ' data points in sample. '
                                                              'Plot has been limited to the ' +
                    str(len(primary_highlight_points + secondary_highlight_points)) + ' selected'
@@ -617,8 +693,5 @@ def add_user_logo(ax, chart_type):
     ax.add_artist(ab)
 
     return ax
-
-
-# Constants
 
 

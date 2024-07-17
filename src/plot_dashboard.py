@@ -14,11 +14,10 @@ from skillcornerviz.standard_plots import scatter_plot as scatter, \
     bar_plot as bar, summary_table as table, radar_plot as radar
 from streamlit_option_menu import option_menu
 import pandas as pd
-from src import usage_monitoring
 
 
 def main(seasons, competitions):
-    # Data request params.
+    # Check if the initial data request step is complete
     if 'spb_requests_complete' not in st.session_state:
         st.subheader('Data request (step 1 of 2)',
                      anchor=False,
@@ -33,88 +32,111 @@ def main(seasons, competitions):
                                                   'Passing',
                                                   'Dealing with pressure'])
 
+        # Gather input parameters for data request
         st.session_state.inputs = \
             st_utils.standard_data_input_interface(seasons=seasons,
                                                    competitions=competitions,
                                                    playing_time=False,
                                                    split_by_options=None,
                                                    competition_limit=10)
-
+        # Set default values for inputs
         st.session_state.inputs['minutes'] = 30
         st.session_state.inputs['matches'] = 0
         st.session_state.inputs['split_by'] = ['player', 'match']
 
+        # Parse and validate user inputs
         st.session_state.inputs = \
             st_utils.parse_standard_user_inputs(st.session_state.inputs,
                                                 seasons=seasons,
                                                 competitions=competitions)
 
+        # Button to request data from API
         if st.button('Request data'):
             with st.spinner('Requesting data from API...'):
-                # Requesting Data from api
+                # If Off-Ball runs have been selected from the selectbox
                 if st.session_state.endpoint == 'Off-ball runs':
+                    # Requesting Data from API
                     client = SkillcornerClient(username=st.session_state.username,
                                                password=st.session_state.password)
 
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
-                        st.session_state.df = pd.concat([st.session_state.df,
-                                                         client.get_in_possession_off_ball_runs(params={
-                                                             'competition': st.session_state.inputs[
-                                                                 'selected_competition_ids'],
-                                                             'season': season,
-                                                             'playing_time__gte': 30,
-                                                             'group_by': ['player', 'match']
-                                                         }
-                                                         )
-                                                         ], ignore_index=True)
+                        # Creates DataFrame with all selected data
+                        season_df = pd.DataFrame(client.get_in_possession_off_ball_runs(params={
+                            'competition': st.session_state.inputs[
+                                'selected_competition_ids'],
+                            'season': season,
+                            'playing_time__gte': 30,
+                            'group_by': ['player', 'match']
+                        }
+                        ))
+
+                        # Concatenates the current session_state DataFrame with the requested data
+                        st.session_state.df = pd.concat([st.session_state.df, season_df], ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
+                # If Passing has been selected from the selectbox
                 if st.session_state.endpoint == 'Passing':
                     client = SkillcornerClient(username=st.session_state.username,
                                                password=st.session_state.password)
                     st.session_state.df = pd.DataFrame()
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
+                        # Creates DataFrame with all selected data
+                        season_df = pd.DataFrame(client.get_in_possession_passes(params={
+                            'competition': st.session_state.inputs[
+                                'selected_competition_ids'],
+                            'season': season,
+                            'playing_time__gte': 30,
+                            'group_by': ['player', 'match']}))
+
+                        # Concatenates the current session_state DataFrame with the requested data
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         client.get_in_possession_passes(params={
-                                                             'competition': st.session_state.inputs[
-                                                                 'selected_competition_ids'],
-                                                             'season': season,
-                                                             'playing_time__gte': 30,
-                                                             'group_by': ['player', 'match']})],
+                                                         season_df],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
+                # If Dealing with Pressure has been selected from the selectbox
                 if st.session_state.endpoint == 'Dealing with pressure':
                     client = SkillcornerClient(username=st.session_state.username,
                                                password=st.session_state.password)
+
                     st.session_state.df = pd.DataFrame()
+
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
+                        # Creates DataFrame with all selected data
+                        season_df = pd.DataFrame(client.get_in_possession_on_ball_pressures(params={
+                            'competition': st.session_state.inputs[
+                                'selected_competition_ids'],
+                            'season': season,
+                            'playing_time__gte': 30,
+                            'group_by': ['player', 'match']}
+                        ))
+
+                        # Concatenates the current session_state DataFrame with the requested data
                         st.session_state.df = pd.concat([st.session_state.df,
-                                                         client.get_in_possession_on_ball_pressures(params={
-                                                             'competition': st.session_state.inputs[
-                                                                 'selected_competition_ids'],
-                                                             'season': season,
-                                                             'playing_time__gte': 30,
-                                                             'group_by': ['player', 'match']}
-                                                         )],
+                                                         season_df],
                                                         ignore_index=True)
 
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
+                # If Physical has been selected from the selectbox
                 if st.session_state.endpoint == 'Physical':
                     client = SkillcornerClient(username=st.session_state.username,
                                                password=st.session_state.password)
+
                     st.session_state.df = pd.DataFrame()
+
                     for season in st.session_state.inputs['selected_season_ids'].split(','):
+                        # Creates DataFrame with all selected data
                         season_df = pd.DataFrame(client.get_physical(params={'season': season,
                                                                              'competition':
                                                                                  st.session_state.inputs[
                                                                                      'selected_competition_ids'],
                                                                              'playing_time__gte': 30,
                                                                              'group_by': ['player', 'match']}))
+                        # Concatenates the current session_state DataFrame with the requested data
                         st.session_state.df = pd.concat([st.session_state.df,
                                                          season_df],
                                                         ignore_index=True)
@@ -122,10 +144,12 @@ def main(seasons, competitions):
                     streamlit_utils.check_for_empty_data_frame(st.session_state.df)
                     st.session_state.df['minutes_played_per_match'] = st.session_state.df['Minutes']
 
+                # Map competition ids to competition names if present in data
                 if 'competition_id' in list(st.session_state.df.columns):
                     mapping = dict(competitions[['id', 'full_name']].values)
                     st.session_state.df['competition_name'] = st.session_state.df['competition_id'].map(mapping)
 
+                # Saves the DataFrame to a csv file in the output folder
                 st.session_state.df.to_csv('output/plot_data.csv')
 
                 st.session_state.spb_requests_complete = True
@@ -138,6 +162,7 @@ def main(seasons, competitions):
                      help='Options to group & filter the dataframe. Furthermore fields like '
                           'player_name can be edited.')
 
+        # Gives the option to group the data
         with st.expander('Group data', ):
             st.caption('Group the data into player, team or competition level benchmarks.')
             grouped_data, minutes, match_count = st_utils.group_match_by_match_data_ui(st.session_state.df,
@@ -146,12 +171,15 @@ def main(seasons, competitions):
                                                                                        minutes_range=(30, 90),
                                                                                        matches_range=(0, 20))
 
+        # Gives the option to filter the data to only include specific data points
         with st.expander('Filter data'):
             st.caption('Filter the data on fields such as position/group to only include '
                        'specific data points in the sample.')
             filter_columns = streamlit_utils.get_filter_columns(grouped_data)
             if 'player_name' in grouped_data.columns:
                 filter_columns = ['player_name', 'short_name'] + filter_columns
+
+            # Creates a new DataFrame with only the filtered data
             filtered_df = streamlit_utils.filter_dataframe(grouped_data,
                                                            filter_columns)
 
@@ -172,6 +200,7 @@ def main(seasons, competitions):
                                  icons=['graph-up', 'bar-chart-line-fill', 'table', 'radioactive'],
                                  default_index=0, orientation="horizontal")
 
+        # Sample information for the selected data
         if 'player_name' in grouped_data.columns:
             sample_info = "Competitions: " + ", ".join(st.session_state.inputs['competition_selection']) + \
                           " | Seasons: " + ", ".join(st.session_state.inputs['season_selection']) + \
@@ -181,6 +210,7 @@ def main(seasons, competitions):
                           " | Seasons: " + ", ".join(st.session_state.inputs['season_selection']) + \
                           " | Performances of at least " + str(minutes) + " minutes in duration"
 
+        # Mapping metrics for display purposes
         st.session_state.metric_mappings = \
             {st.session_state.metrics[i].replace('_', ' ').title(): st.session_state.metrics[i]
              for i in range(len(st.session_state.metrics))}
@@ -188,28 +218,35 @@ def main(seasons, competitions):
         if chart_type == 'Scatter Plot':
             st.write('Axis values:')
 
+            # Create columns for selecting x/y-axis values and labels
             x_col_1, x_col_2 = st.columns(2)
             y_col_1, y_col_2 = st.columns(2)
 
+            # Dropdown to select the metric and label for the x-axis
             x_value = x_col_1.selectbox('Select x-axis metric', st.session_state.metric_mappings.keys())
             x_label = x_col_2.text_input('Edit x-axis label', x_value)
 
+            # Dropdown to select the metric and label for the y-axis
             y_value = y_col_1.selectbox('Select y-axis metric', st.session_state.metric_mappings.keys())
             y_label = y_col_2.text_input('Edit y-axis label', y_value)
 
             st.divider()
+            # How the data points should be labeled
             st.write('Data points to label:')
             scatter_label = st.selectbox('Text label for points',
                                          st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
 
+            # Highlighting options for data points
             label_col_1, label_col_2 = st.columns(2)
             target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
             comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
 
+            # Option to highlight outlier data points
             label_outliers = st.radio('Label outliers', ['None', 'Outliers', 'Only Very Big Outliers'],
                                       horizontal=True, help='Outliers are the data points around the edge of the '
                                                             'chart that rank very high or very low.')
 
+            # Determine standard deviation thresholds for highlighting based on outlier labeling
             if label_outliers == 'Very Big Outliers':
                 x_sd_highlight = 2
                 y_sd_highlight = 2
@@ -229,6 +266,7 @@ def main(seasons, competitions):
 
             st.divider()
             st.write('Benchmark options:')
+            # Options to add extra information to the plot
             show_average_line = st.toggle('Show sample average', value=True)
             show_regression_line = st.toggle('Show regression line')
             add_sample_info = st.toggle('Add sample information', value=True)
@@ -239,16 +277,10 @@ def main(seasons, competitions):
                 edited_df = edited_df[(~edited_df[st.session_state.metric_mappings[x_value]].isna()) &
                                       (~edited_df[st.session_state.metric_mappings[y_value]].isna())]
 
+            # Button to plot data
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
-                    # Log report creation.
-                    usage_monitoring.append_to_gsheet('chart dashboard scatter ' + st.session_state.endpoint,
-                                                      competitions=st.session_state.inputs['competition_selection'],
-                                                      seasons=st.session_state.inputs['season_selection'],
-                                                      minutes=minutes,
-                                                      matches=match_count,
-                                                      external_tool=True)
-
+                    # Plots a scatter plot
                     fig, ax = scatter.plot_scatter(df=edited_df,
                                                    x_metric=st.session_state.metric_mappings[x_value],
                                                    y_metric=st.session_state.metric_mappings[y_value],
@@ -268,7 +300,8 @@ def main(seasons, competitions):
                                                    regression_line=show_regression_line,
                                                    data_point_id='data_point_id')
 
-                    if add_sample_info == True:
+                    # Adds sample info if selected
+                    if add_sample_info:
                         ax = st_utils.add_plot_sample(ax, sample_info +
                                                       " | " + str(len(edited_df)) + " datapoints in sample",
                                                       x=0, y=-0.125)
@@ -293,15 +326,18 @@ def main(seasons, competitions):
         if chart_type == 'Bar Chart':
             st.write('Axis values:')
 
+            # Create two columns for selecting metric and label
             x_col_1, x_col_2 = st.columns(2)
             metric = x_col_1.selectbox('Select metric', st.session_state.metric_mappings.keys())
             label = x_col_2.text_input('Edit metric label', metric)
 
             st.divider()
+            # User chooses which data points to include in the plot
             st.write('Data points to include:')
             data_point_label = st.selectbox('Text label for points',
                                             st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
 
+            # Two columns for selecting points to highlight
             label_col_1, label_col_2 = st.columns(2)
             primary_highlight_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
             secondary_highlight_points = label_col_2.multiselect('Secondary highlight color',
@@ -314,16 +350,9 @@ def main(seasons, competitions):
             add_sample_info = st.toggle('Add sample information', value=True)
             st.divider()
 
+            # Button to plot Bar Plot
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
-                    # Log report creation.
-                    usage_monitoring.append_to_gsheet('chart dashboard scatter ' + st.session_state.endpoint,
-                                                      competitions=st.session_state.inputs['competition_selection'],
-                                                      seasons=st.session_state.inputs['season_selection'],
-                                                      minutes=minutes,
-                                                      matches=match_count,
-                                                      external_tool=True)
-
                     # Ensure sample is smaller than 40 data points so plot is readable.
                     edited_df = st_utils.bar_chart_sample_filter(edited_df, st.session_state.metric_mappings[metric],
                                                                  primary_highlight_points, secondary_highlight_points)
@@ -346,7 +375,8 @@ def main(seasons, competitions):
                                                  data_point_id='data_point_id',
                                                  fontsize=fontsize)
 
-                    if add_sample_info == True:
+                    # Adds sample information if selected
+                    if add_sample_info:
                         ax = st_utils.add_plot_sample(ax, sample_info, x=0, y=-0.125)
 
                     # Load the image for the watermark
@@ -368,12 +398,14 @@ def main(seasons, competitions):
 
         if chart_type == 'Table':
             st.write('Metrics:')
+            # Menu to select which metrics to include
             metrics = st.multiselect('Select metrics', st.session_state.metric_mappings.keys())
 
             with st.expander('Edit metric labels'):
                 name_col1, name_col2 = st.columns(2)
                 metric_name_updates = []
                 for i, m in enumerate(metrics):
+                    # Loop through selected metrics to create text inputs for label customization
                     if i % 2 == 0:
                         metric_name_updates.append(name_col1.text_input(m, m.replace('_', ' ').title()))
                     if i % 2 == 1:
@@ -383,6 +415,7 @@ def main(seasons, competitions):
 
             st.write('Data points to include:')
 
+            # Which data points are included in the plot
             data_points = st.multiselect('Data points', edited_df['data_point_id'])
             data_point_label = st.selectbox('Text label for data points',
                                             st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
@@ -391,6 +424,7 @@ def main(seasons, competitions):
 
             st.write('Table Options:')
 
+            # Styling/Additional Info for the plot
             rotate_column_names = st.toggle('Rotate column headings')
             display_metric_value = st.toggle('Display metric value', value=True)
             display_percentile_value = st.toggle('Display percentile value')
@@ -398,21 +432,14 @@ def main(seasons, competitions):
 
             st.divider()
 
+            # Button to plot the table
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
-                    # Log report creation.
-                    usage_monitoring.append_to_gsheet('chart dashboard scatter ' + st.session_state.endpoint,
-                                                      competitions=st.session_state.inputs['competition_selection'],
-                                                      seasons=st.session_state.inputs['season_selection'],
-                                                      minutes=minutes,
-                                                      matches=match_count,
-                                                      external_tool=True)
-
-                    if display_metric_value == True & display_percentile_value == True:
+                    if display_metric_value & display_percentile_value:
                         display = 'values+rank'
-                    elif display_metric_value == True:
+                    elif display_metric_value:
                         display = 'values'
-                    elif display_percentile_value == True:
+                    elif display_percentile_value:
                         display = 'rank'
                     else:
                         display = 'none'
@@ -453,10 +480,12 @@ def main(seasons, competitions):
 
         if chart_type == 'Radar':
 
+            # Multiselect dropdown to choose the player for the radar chart
             player_selection = st.multiselect(
                 'Player: (' + str(len(edited_df)) + ' players in position & match/minute selection)',
                 edited_df['data_point_id'], max_selections=6)
 
+            # Various options for customizing the radar chart
             add_plot_info = st.checkbox('Add plot info', True)
             filter_relevant = st.checkbox('Included only position specific run types', True)
             selected_language = st.radio('Language:', constants.RUN_TYPES_COUNT_READABLE.keys(), horizontal=True)
@@ -466,6 +495,7 @@ def main(seasons, competitions):
             season_text = ", ".join(st.session_state.inputs['season_selection'])
             position_text = ", ".join(edited_df.group.unique())
 
+            # Define radar metrics and labels based on the selected endpoint
             if st.session_state.endpoint == 'Off-ball runs':
                 radar_metrics = constants.RUN_METRICS_PER_30_TIP
                 radar_metrics_labels = constants.RUN_TYPES_COUNT_READABLE[selected_language]
@@ -493,25 +523,19 @@ def main(seasons, competitions):
                                         'Difficult Pass Attempts']))
                 suffix = [' p30 TIP', ' p30 TIP', '%', '%', ' p30 TIP', ' p30 TIP']
 
-            if compact_labels == True:
+            if compact_labels:
                 radar_metrics_labels = {label: split_string_with_new_line(name) for label, name in
                                         radar_metrics_labels.items()}
 
+            # Button to plot the data
             if st.button('📊 Plot data'):
                 with st.spinner('Plotting data...'):
-                    # Log report creation.
-                    usage_monitoring.append_to_gsheet('chart dashboard radar ' + st.session_state.endpoint,
-                                                      competitions=st.session_state.inputs['competition_selection'],
-                                                      seasons=st.session_state.inputs['season_selection'],
-                                                      minutes=minutes,
-                                                      matches=match_count)
-
                     for count, player in enumerate(player_selection):
                         player_df = edited_df[edited_df['data_point_id'] == player]
                         plot_title = (
                             player_df['player_name'].iloc[0] + ' | ' + player_df['team_name'].iloc[0] + ' | ' +
                             player_df['group'].iloc[0] if
-                            player != None else 'Profile')
+                            player is not None else 'Profile')
 
                         fig, ax = radar.plot_radar(df=edited_df,
                                                    label=player,
@@ -533,6 +557,8 @@ def main(seasons, competitions):
                         st.pyplot(fig)
 
         st.divider()
+
+        # Option to download the data to a csv file
         st.download_button(
             "⬇ Download data",
             st.session_state.df.to_csv(index=False).encode('utf-8'),

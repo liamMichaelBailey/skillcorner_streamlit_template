@@ -1,3 +1,10 @@
+"""
+Markos Bontozoglou
+17/07/2024
+Contains constants that are used by the dashboard, including translations to Spanish,
+French, Portuguese, Italian, and German.
+"""
+
 RUN_TYPES_COUNT_READABLE = {
     'ENG':
         {'count_cross_receiver_runs_per_30_tip': 'Cross Receiver Runs',
