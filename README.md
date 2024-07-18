@@ -1,30 +1,61 @@
-# external_skc_tool_template
+# Instructions to use the Skillcorner Vizualisation Tool
 
-### Steps:
-1. Add Application logo image
-2. Add chart watermark image
-3. Update path to images in secrets file
-4. Update auth Referer in secrets file
-5. Upload to GitHub
-6. Test on local version
-7. Set up query to monitor usage
-8. Deploy to Streamlit cloud
-9. Add secrets to Streamlit cloud & update url
-10. Share with client
+## 1) Logging In
 
-### Initial client communication:
+To log in to the app enter your SkillCorner API credentials into the username & password fields on the
+side bar. The username & password are the same as used to access the SkillCorner Web
+Query Tool. Once successfully authenticated, the user’s competition edition (competition & season
+combination) access will be displayed in the sidebar.
 
-To help engage with SkillCorner data, I have put together a dashboard for you guys to be able to visualise our data more flexibly:
+## 2) Requesting the Data
 
-LINK_TO_APP
+The first step of using the tool is to request the data for the desired competition & season.
+The application will request the data at match by match performance level with a minimum
+performance duration threshold of 30 minutes. Once the request is complete the data can be grouped
+& filtered into player, team & competition benchmarks.
 
-Feel free to share the link above with anyone in ORGANISATION that has access to our data. Your login details are the same as used to access the web query tool. The dashboard lets the user:
+## 3) Grouping and Filtering the Data
 
-1. Pull data for any of our packages (GI or Physical)
-2. Group & filter the data at player or team level
-3. Generate bar charts, scatter plots & formatted ranking tables.
+Once the match by match performance data is returned from the API, the user can group the data into
+player, team or competition level benchmarks. Use the “group data by” field to aggregate the
+data at the desired level (this can be changed at any time). Some common data groupings are below:
 
-There is a user guide linked in the app that hopefully covers most key points. But also happy to arrange a call & give a demo/walk through to any key users if it would help. 
+● player, team, group → data by player in high level positional groups (Hakimi playing in the full
+back group).
+
+● player, team, position → data by player & positions (E.g. Hakimi playing in the RWB position).
+
+● team, competition → data by team in each competition (E.g. PSG playing in Ligue 1)
+
+● team, group → data by team in each positional group (E.g. PSG Midfield average)
+
+● competition → data by competition (E.g. Ligue 1 average)
+
+● competition, group → data by competition & positional group (E.g. Ligue 1 Full Back average)
+
+After grouping the data, the user can filter the sample on various conditions. To do so select
+group in the 'filter data' column & then the positions that need to be analysed. Data can be filtered by 
+fields such as group, position, player birthdate, team, competition & the number of events in the benchmark sample.
+
+## 4) Plotting the Data
+
+Following the data being grouped & filtered to create a sample of benchmarks it can be plotted in
+four different types of charts: scatter plot, bar chart, summary table, and radar plot. Each chart is generated in a similar
+fashion & can be downloaded as a high resolution PNG file. To start the user selects a metric to rank the
+players by from the 'select metric' drop down menu. The text edit field to the right allows the user
+to edit the label that will be plotted on the chart. By default the metric label will be the standard
+metric name.
+
+All the chart types include options to highlight particular data points of interest. A text value
+can be selected that will be used to label data points. Usually the label would be player_name,
+short_name, team_name or competition_name depending on how the data is organised. The bar plot
+has two further options to highlight data points in SkillCorners primary or secondary green colours.
+
+For each plot additional formatting options can be toggled on/off. There are options to rotate the plot
+to use vertical bars, add each data point’s value as text to the end of the bar & include information of the data sample.
+
+Lastly, when the user has selected all of their data points and formatting options, the 'Create Plot' button
+should be pressed to create the user's plot.
 
 Note this is an adhoc dashboard with the aim to support a small group of users to quickly visualise SkillCorner. 
 If something more powerful & substantial is required we are happy to investigate options.
