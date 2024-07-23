@@ -11,7 +11,7 @@ from skillcorner.client import SkillcornerClient
 from src import constants
 from skillcornerviz.utils.skillcorner_utils import split_string_with_new_line
 from skillcornerviz.standard_plots import scatter_plot as scatter, \
-    bar_plot as bar, summary_table as table, radar_plot as radar
+    bar_plot as bar, summary_table as table, radar_plot as radar, swarm_violin_plot as svp
 from streamlit_option_menu import option_menu
 import pandas as pd
 
@@ -196,8 +196,8 @@ def main(seasons, competitions):
                      help="Plot the data in three formats: scatter plot, bar chart or table.")
 
         # 2. horizontal menu
-        chart_type = option_menu(None, ['Scatter Plot', 'Bar Chart', 'Table', 'Radar'],
-                                 icons=['graph-up', 'bar-chart-line-fill', 'table', 'radioactive'],
+        chart_type = option_menu(None, ['Scatter Plot', 'Bar Chart', 'Table', 'Radar', 'SV Plot'],
+                                 icons=['graph-up', 'bar-chart-line-fill', 'table', 'radioactive', 'graph-down'],
                                  default_index=0, orientation="horizontal")
 
         # Sample information for the selected data
@@ -555,6 +555,91 @@ def main(seasons, competitions):
                                                    data_point_id='data_point_id')
 
                         st.pyplot(fig)
+
+        if chart_type == 'SV Plot':
+            st.write('Axis Values: ')
+
+            # Create columns for selecting x/y-axis values and labels
+            x_col_1, x_col_2 = st.columns(2)
+            y_col_1, y_col_2 = st.columns(2)
+            y_group_col1, y_group_col2 = st.columns(2)
+
+            # Dropdown to select the metric and label for the x-axis
+            x_value = x_col_1.selectbox('Select x-axis metric', st.session_state.metric_mappings.keys())
+            x_label = x_col_2.text_input('Edit x-axis label', x_value)
+
+            # Dropdown to select the metric and label for the y-axis
+            y_value = y_col_1.selectbox('Select y-axis categorical group',
+                                        ['Positional Grouping', 'Team Grouping'])
+
+            if y_value == 'Positional Grouping':
+                positions = edited_df['group'].unique()  # Gets all the unique positions
+                positions_list = positions.tolist()
+                y_group = y_group_col1.multiselect('Select positions to include on y-axis', positions_list)
+                y_metric = 'group'
+
+            elif y_value == 'Team Grouping':
+                team_names = edited_df['team_name'].unique()  # Gets all the unique teams in the DataFrame
+                teams_list = team_names.tolist()
+                y_group = y_group_col1.multiselect('Select teams to include on y-axis', teams_list)
+                y_metric = 'team_name'
+
+            st.divider()
+            # How the data points should be labeled
+            st.write('Data points to label:')
+            svp_label = st.selectbox('Text label for points',
+                                         st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
+
+            # Highlighting options for data points
+            label_col_1, label_col_2 = st.columns(2)
+            target_points = label_col_1.multiselect('Primary highlight color', edited_df['data_point_id'])
+            comparison_points = label_col_2.multiselect('Secondary highlight color', edited_df['data_point_id'])
+
+            st.divider()
+            st.write('Benchmark options:')
+            # Options to add extra information to the plot
+            add_sample_info = st.toggle('Add sample information', value=True)
+
+            st.divider()
+
+            # Button to plot data
+            if st.button('📊 Plot data'):
+                with st.spinner('Plotting data...'):
+                    # Plots a scatter plot
+                    fig, ax = svp.plot_swarm_violin(df=edited_df,
+                                                    x_metric=st.session_state.metric_mappings[x_value],
+                                                    y_metric=y_metric,
+                                                    data_point_label=svp_label,
+                                                    x_label=x_label,
+                                                    y_groups=y_group,
+                                                    y_group_labels=y_group,
+                                                    x_unit=st_utils.get_axis_unit(x_value),
+                                                    primary_highlight_group=target_points,
+                                                    secondary_highlight_group=comparison_points,
+                                                    data_point_id='data_point_id')
+
+                    # Adds sample info if selected
+                    if add_sample_info:
+                        ax = st_utils.add_plot_sample(ax, sample_info +
+                                                      " | " + str(len(edited_df)) + " datapoints in sample",
+                                                      x=0, y=-0.125)
+
+                    # Load the image for the watermark
+                    st_utils.add_user_logo(ax, 'SV Plot')
+
+                    fig.savefig('output/plot.png',
+                                format='png',
+                                dpi=300,
+                                bbox_inches='tight')
+
+                    with open("output/plot.png", "rb") as file:
+                        st.download_button(
+                            label="Download plot",
+                            data=file,
+                            file_name="skillcorner_plot.png",
+                            mime="image/png")
+
+                    st.pyplot(fig)
 
         st.divider()
 
