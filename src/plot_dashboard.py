@@ -67,6 +67,9 @@ def main(seasons, competitions):
                                 'selected_competition_ids'],
                             'season': season,
                             'playing_time__gte': 30,
+                            'run_type': 'run_in_behind,run_ahead_of_the_ball,support_run,pulling_wide_run,'
+                                        'coming_short_run,underlap_run,overlap_run,dropping_off_run,'
+                                        'pulling_half_space_run,cross_receiver_run',
                             'group_by': ['player', 'match']
                         }
                         ))
@@ -88,6 +91,9 @@ def main(seasons, competitions):
                                 'selected_competition_ids'],
                             'season': season,
                             'playing_time__gte': 30,
+                            'run_type': 'run_in_behind,run_ahead_of_the_ball,support_run,pulling_wide_run,'
+                                        'coming_short_run,underlap_run,overlap_run,dropping_off_run,'
+                                        'pulling_half_space_run,cross_receiver_run',
                             'group_by': ['player', 'match']}))
 
                         # Concatenates the current session_state DataFrame with the requested data
@@ -111,6 +117,7 @@ def main(seasons, competitions):
                                 'selected_competition_ids'],
                             'season': season,
                             'playing_time__gte': 30,
+                            'pressure_intensity': 'low,medium,high',
                             'group_by': ['player', 'match']}
                         ))
 
