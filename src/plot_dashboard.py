@@ -570,25 +570,51 @@ def main(seasons, competitions):
 
             # Dropdown to select the metric and label for the y-axis
             y_value = y_col_1.selectbox('Select y-axis categorical group',
-                                        ['Positional Grouping', 'Team Grouping'])
+                                        ['Positional Grouping (e.g. Midfielder)',
+                                         'Exact Position Grouping (e.g. CDM, CAM)',
+                                         'Team Grouping', 'Season Grouping', 'Competition Grouping'])
 
-            if y_value == 'Positional Grouping':
+            if y_value == 'Positional Grouping (e.g. Midfielder)':
                 positions = edited_df['group'].unique()  # Gets all the unique positions
                 positions_list = positions.tolist()
-                y_group = y_group_col1.multiselect('Select positions to include on y-axis', positions_list)
+                y_group = y_group_col1.multiselect('Select positions to include on the y-axis', positions_list)
                 y_metric = 'group'
+                edited_df = edited_df[edited_df['group'].isin(y_group)]
+
+            elif y_value == 'Exact Position Grouping (e.g. CDM, CAM)':
+                positions = edited_df['position'].unique()
+                positions_list = positions.tolist()
+                y_group = y_group_col1.multiselect('Select positions to include on the y-axis', positions_list)
+                y_metric = 'position'
+                edited_df = edited_df[edited_df['position'].isin(y_group)]
 
             elif y_value == 'Team Grouping':
                 team_names = edited_df['team_name'].unique()  # Gets all the unique teams in the DataFrame
                 teams_list = team_names.tolist()
-                y_group = y_group_col1.multiselect('Select teams to include on y-axis', teams_list)
+                y_group = y_group_col1.multiselect('Select teams to include on the y-axis', teams_list)
                 y_metric = 'team_name'
+                edited_df = edited_df[edited_df['team_name'].isin(y_group)]
+
+            elif y_value == 'Season Grouping':
+                seasons = edited_df['season_name'].unique()
+                seasons_list = seasons.tolist()
+                y_group = y_group_col1.multiselect('Select seasons to include on the y-axis', seasons_list)
+                y_metric = 'season_name'
+                edited_df = edited_df[edited_df['season_name'].isin(y_group)]
+
+            elif y_value == 'Competition Grouping':
+                leagues = edited_df['competition_name'].unique()
+                leagues_list = leagues.tolist()
+                y_group = y_group_col1.multiselect('Select leagues to include on the y-axis', leagues_list)
+                y_metric = 'competition_name'
+                edited_df = edited_df[edited_df['competition_name'].isin(y_group)]
 
             st.divider()
+
             # How the data points should be labeled
             st.write('Data points to label:')
             svp_label = st.selectbox('Text label for points',
-                                         st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
+                                     st_utils.get_chart_label_options(edited_df) + ['data_point_id'])
 
             # Highlighting options for data points
             label_col_1, label_col_2 = st.columns(2)
