@@ -4,17 +4,17 @@ A tool that allows users to create visualizations through an intuitive user inte
 enabling effortless data exploration and presentation. Users can build charts, graphs,
 and tables without coding, making complex data insights accessible and visually appealing
 for informed decision-making.
-------------------------------------------------------------------------------------------------------------------------
+
 ## How to Run the Application
 
 Having opened the relevant project through your IDE, open the terminal and run the command 'streamlit run main.py'.
 This will open a localhost environment through your web-browser and allow you to access the application. 
-------------------------------------------------------------------------------------------------------------------------
+
 ## How to Deploy the Application
 
 Once having ran the application, on the upper-right of the page there will be a 'Deploy' button. 
 Click on this button and follow the further instructions that are displayed. 
-------------------------------------------------------------------------------------------------------------------------
+
 # Instructions to use the Skillcorner Vizualisation Tool
 
 ## 1) Logging In
