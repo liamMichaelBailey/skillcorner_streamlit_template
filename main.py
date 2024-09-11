@@ -1,7 +1,14 @@
+"""
+Liam Bailey
+11/09/2024
+Entry page for Streamlit App.
+This page handles the user authentication logic & initial calling of data request/plotting dashboards.
+"""
 import streamlit as st
 from src import user_authentication as user_auth
-from src import plot_dashboard
+from src.dashboards import data_request_dashboard, plot_dashboard
 from resources import translations
+
 st.set_page_config(page_title='SkillCorner Visualisation Dashboard',
                    page_icon='resources/images/skillcorner_icon.png',
                    layout="wide")
@@ -14,36 +21,15 @@ hide_menu_style = """
          """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-st.sidebar.image(st.secrets.LOGO_IMAGE_PATH)
-hide_img_fs = '''
-<style>
-button[title="View fullscreen"]{
-    visibility: hidden;}
-</style>
-'''
-st.markdown(hide_img_fs, unsafe_allow_html=True)
+st.logo(st.secrets.LOGO_IMAGE_PATH)
+
 
 st.sidebar.divider()
 
 st.title("SkillCorner Visualisation Dashboard", anchor=False)
 language =  st.sidebar.radio('Language',['ENG','ESP','POR','ITA'], horizontal=True)
 
-# st.markdown(
-#     """
-#     This SkillCorner Visualisation Tool is a
-#     prototype product & that aims to enable easy & convenient
-#     visualisation of SkillCorner Physical & Game Intelligence benchmarks. Using the tool, data can be
-#     aggregated at player, team or competition level. Currently, three standard SkillCorner charts are
-#     available: scatter plot, bar chart & formatted table. Please send any feedback on the application to the
-#     SkillCorner Analysis team. The app works in two stages:
-#
-#     1. Requesting the data from the api.
-#     2. Grouping, filtering & plotting data.
-#
-#     [Open user guide](https://drive.google.com/file/d/1Z9xi1J_TXjsZf3funuHXAkgHc14a13IN/view?usp=sharing)\n
-#     [Send feedback to the SkillCorner Analysis team](https://docs.google.com/forms/d/e/1FAIpQLSeMW0yLRNziF21fz9AZgD_YMpgAlCzVwpZBfFmnBWuE0NrkGQ/viewform?usp=sf_link)
-#     """
-# )
+st.sidebar.divider()
 
 st.markdown(translations.introduction_text[language])
 
@@ -58,5 +44,8 @@ if 'authenticated' not in st.session_state:
 if 'authenticated' in st.session_state:
     user_auth.logout_component()
 
-    plot_dashboard.main(seasons=st.session_state.accessible_seasons,
-                                competitions=st.session_state.accessible_competitions)
+    if 'spb_requests_complete' not in st.session_state:
+        data_request_dashboard.main()
+
+    if 'spb_requests_complete' in st.session_state:
+        plot_dashboard.main()

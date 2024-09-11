@@ -29,17 +29,11 @@ def get_competition_editions(username, password):
     Returns:
         list: A list of accessible competition editions retrieved from the API.
     """
-    headers = {
-        'Referer': st.secrets.AUTH_REFERER,  # Reference URL for authentication
-        'Username': username,  # Username for API access
-    }
-
     # API endpoint to fetch competition editions
     request_string_competition_editions = 'https://skillcorner.com/api/competition_editions/?user=true&limit=1000'
 
     # Make the GET request to the API with authentication
     response_API = requests.get(request_string_competition_editions,
-                                headers=headers,
                                 auth=HTTPBasicAuth(username=username, password=password))
 
     # Parse the response data as JSON and extract the results
@@ -83,14 +77,14 @@ def login_component():
                 # Parse user access information
                 st.session_state.accessible_competitions, \
                     st.session_state.accessible_seasons, \
-                    st.session_state.accessible_competition_edition_names = parse_user_access()
+                    st.session_state.accessible_competition_editions = parse_user_access()
 
                 # Update session state with authentication status and accessible resources
                 st.session_state.auth_state_keys = ['authenticated',
                                                     'username',
                                                     'password',
                                                     'available_competition_editions',
-                                                    'accessible_competition_edition_names',
+                                                    'accessible_competition_editions',
                                                     'accessible_competitions',
                                                     'accessible_seasons',
                                                     'auth_state_keys']
@@ -115,7 +109,8 @@ def logout_component(show_competition_access=True):
 
     # Optionally show the user's accessible competition editions
     if show_competition_access:
-        st.sidebar.dataframe(st.session_state.accessible_competition_edition_names,
+        st.sidebar.dataframe(
+            pd.DataFrame(st.session_state.accessible_competition_editions.keys()),
                              column_config={
                                  "0": "My competition editions",
                              },
@@ -127,10 +122,6 @@ def logout_component(show_competition_access=True):
         # Clear all keys from session state
         for key in st.session_state.keys():
             del st.session_state[key]
-
-        # Clear cached data
-        st.experimental_memo.clear()
-        st.experimental_singleton.clear()
 
         # Rerun the application to update the UI
         st.rerun()
@@ -145,13 +136,13 @@ def parse_user_access():
         accessible_seasons (DataFrame): DataFrame of unique seasons.
         accessible_competition_edition_names (Series): Series of accessible competition edition names.
     """
-    accessible_competition_edition_names = []
+    accessible_competition_editions = {}
     accessible_competitions = []
     accessible_seasons = []
 
     # Collect competition edition names, competitions, and seasons from session state
     for competition_edition in st.session_state.accessible_competition_editions:
-        accessible_competition_edition_names.append(competition_edition['name'])
+        accessible_competition_editions[competition_edition['name']] = competition_edition['id']
         accessible_competitions.append(competition_edition['competition'])
         accessible_seasons.append(competition_edition['season'])
 
@@ -162,7 +153,6 @@ def parse_user_access():
     accessible_seasons = pd.DataFrame(accessible_seasons).drop_duplicates()
 
     # Convert list of names to a pandas Series
-    accessible_competition_edition_names = pd.Series(accessible_competition_edition_names)
 
-    return accessible_competitions, accessible_seasons, accessible_competition_edition_names
+    return accessible_competitions, accessible_seasons, accessible_competition_editions
 

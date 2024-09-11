@@ -1,7 +1,8 @@
 numpy==1.24.2
 pandas==1.5.3
-requests==2.27.1
+requests==2.31.0
 skillcorner
+skillcornerviz
 streamlit
 streamlit_image_select
 streamlit_option_menu
