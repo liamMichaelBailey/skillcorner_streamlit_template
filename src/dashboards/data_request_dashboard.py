@@ -132,7 +132,8 @@ def main():
                     ce_df = pd.DataFrame(client.get_physical(params={
                         'competition_edition': st.session_state.accessible_competition_editions[ce],
                         'playing_time__gte': 30,
-                        'data_version': 2,
+                        'possession': 'all,tip,otip',
+                        'data_version': 3,
                          'group_by': ['player', 'match']}))
                     # Concatenates the current session_state DataFrame with the requested data
                     st.session_state.df = pd.concat([st.session_state.df,
@@ -143,8 +144,9 @@ def main():
                 streamlit_utils.check_for_empty_data_frame(st.session_state.df)
 
                 st.dataframe(st.session_state.df)
-                st.session_state.df['minutes_played_per_match'] = st.session_state.df['Minutes']
-                st.session_state.df['minutes_full_all'] = st.session_state.df['Minutes']
+                st.session_state.df['minutes_played_per_match'] = st.session_state.df['minutes_full_all']
+                st.session_state.df['group'] = st.session_state.df['position_group']
+                st.session_state.df['short_name'] = st.session_state.df['player_short_name']
 
             # Map competition ids to competition names if present in data
             if 'competition_id' in list(st.session_state.df.columns):

@@ -14,8 +14,7 @@ introduction_text = {
         """,
     'ENG':
         """
-         This SkillCorner Visualisation Tool is a
-         prototype product & that aims to enable easy & convenient
+         This SkillCorner Visualisation Tool aims to enable easy & convenient
          visualisation of SkillCorner Physical & Game Intelligence benchmarks. Using the tool, data can be
          aggregated at player, team or competition level. Currently, four standard SkillCorner charts are
          available: scatter plot, bar chart, formatted table and radar plot. Please send any feedback on the application to the

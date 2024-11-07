@@ -15,73 +15,6 @@ from skillcornerviz.utils import skillcorner_utils as skc_utils, \
     skillcorner_game_intelligence_utils as gi_utils, skillcorner_physical_utils as phy_utils
 
 
-def add_playing_under_pressure_normalisations(df):
-    """
-        Adds the normalisations for playing under pressure on an existing DataFrame.
-
-        Args:
-            df (pandas.DataFrame): DataFrame to add the normalisations to.
-
-        Returns:
-            list (metrics): A list of metrics that have been added to the df
-        """
-    intensities = ['', '_low', '_medium', '_high']
-
-    metrics = []
-
-    df, per_90_metrics = gi_utils.add_per_90_metrics(df)
-    metrics += per_90_metrics
-
-    df, per_30_tip_metrics = gi_utils.add_per_30_tip_metrics(df)
-    metrics += per_30_tip_metrics
-
-    # Calculates different metrics and adds them to both the DataFrame and the metrics list.
-    for i in intensities:
-        df['ball_retention_ratio_under' + i + '_pressure'] = \
-            (df['count_ball_retentions_under' + i + '_pressure_per_match'] /
-             df['count' + i + '_pressures_received_per_match']) * 100
-
-        metrics.append('ball_retention_ratio_under' + i + '_pressure')
-
-        df['count_dangerous_pass_attempts_under' + i + '_pressure_per_100_pressures'] = \
-            (df['count_dangerous_pass_attempts_under' + i + '_pressure_per_match'] /
-             (df['count' + i + '_pressures_received_per_match'] / 100))
-
-        metrics.append('count_dangerous_pass_attempts_under' + i + '_pressure_per_100_pressures')
-
-        df['count_completed_dangerous_passes_under' + i + '_pressure_per_100_pressures'] = \
-            (df['count_completed_dangerous_passes_under' + i + '_pressure_per_match'] /
-             (df['count' + i + '_pressures_received_per_match'] / 100))
-
-        metrics.append('count_completed_dangerous_passes_under' + i + '_pressure_per_100_pressures')
-
-        df['dangerous_pass_completion_ratio_under' + i + '_pressure'] = \
-            (df['count_completed_dangerous_passes_under' + i + '_pressure_per_90'] /
-             df['count_dangerous_pass_attempts_under' + i + '_pressure_per_90']) * 100
-
-        metrics.append('dangerous_pass_completion_ratio_under' + i + '_pressure')
-
-        df['count_difficult_pass_attempts_under' + i + '_pressure_per_100_pressures'] = \
-            (df['count_difficult_pass_attempts_under' + i + '_pressure_per_match'] /
-             (df['count' + i + '_pressures_received_per_match'] / 100))
-
-        metrics.append('count_difficult_pass_attempts_under' + i + '_pressure_per_100_pressures')
-
-        df['count_completed_difficult_passes_under' + i + '_pressure_per_100_pressures'] = \
-            (df['count_completed_difficult_passes_under' + i + '_pressure_per_match'] /
-             (df['count' + i + '_pressures_received_per_match'] / 100))
-
-        metrics.append('count_completed_difficult_passes_under' + i + '_pressure_per_100_pressures')
-
-        df['difficult_pass_completion_ratio_under' + i + '_pressure'] = \
-            (df['count_completed_difficult_passes_under' + i + '_pressure_per_90'] /
-             df['count_difficult_pass_attempts_under' + i + '_pressure_per_90']) * 100
-
-        metrics.append('difficult_pass_completion_ratio_under' + i + '_pressure')
-
-    return metrics
-
-
 def get_filter_columns(df):
     """
     Retrieves a list of columns from the DataFrame that are relevant for filtering.
@@ -253,8 +186,8 @@ def group_match_by_match_data_ui(match_by_match_df,
     elif endpoint == 'Physical':
         st.session_state.metrics = phy_utils.add_standard_metrics(df)
         # Filter metrics based on specified substrings
-        specified_substrings = ["Minutes", "P90", "P60 BIP", "P30 OTIP", "P30 TIP", "PSV-99", "Meters per Minute",
-                                'Distance per Sprint']
+        specified_substrings = ["minutes", "per_90", "per_60_bip", "per_30_tip", "per_30_otip",
+                                "psv99", "meters_per_minutes", 'distance_per_sprint']
         filtered_list = [item for item in st.session_state.metrics if
                          any(substring in item for substring in specified_substrings)]
 
@@ -316,7 +249,7 @@ def add_plot_sample(ax, text, x=0, y=0, fontsize=6):
 def get_axis_unit(metric):
     if ' distance ' in ' ' + metric.lower().replace('_', ' ') + ' ':
         return 'm'
-    elif ' psv-99 ' in ' ' + metric.lower().replace('_', ' ') + ' ':
+    elif ' psv99 ' in ' ' + metric.lower().replace('_', ' ') + ' ':
         return 'km/h'
     elif ' ratio ' in ' ' + metric.lower().replace('_', ' ') + ' ':
         return '%'

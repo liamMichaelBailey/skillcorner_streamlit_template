@@ -80,7 +80,10 @@ def main():
 
     if chart_type == 'Radar':
         if 'player_name' in filter_columns:
-            radar_dashboard.main()
+            if st.session_state.endpoint in ['Off-ball runs', 'Passing']:
+                radar_dashboard.main()
+            else:
+                st.warning('Radars are only available for off-ball run & passing metrics.')
         else:
             st.warning('Data must be grouped at player level to use radar plots.')
 

@@ -57,11 +57,11 @@ def main():
             else:
                 display = 'none'
 
-            fig, ax = table.plot_summary_table_rev(df=st.session_state.edited_df,
+            fig, ax = table.plot_summary_table(df=st.session_state.edited_df,
                                                metrics=[st.session_state.metric_mappings[m]
                                                         for m in metrics],
                                                metric_col_names=metric_name_updates,
-                                               players=data_points,
+                                               highlight_group=data_points,
                                                data_point_label=data_point_label,
                                                data_point_id='data_point_id',
                                                percentiles_mode=True,
