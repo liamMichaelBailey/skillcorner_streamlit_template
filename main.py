@@ -23,7 +23,6 @@ st.markdown(hide_menu_style, unsafe_allow_html=True)
 
 st.logo(st.secrets.LOGO_IMAGE_PATH)
 
-
 st.sidebar.divider()
 
 st.title("SkillCorner Visualisation Dashboard", anchor=False)
