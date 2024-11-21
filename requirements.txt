@@ -1,0 +1,10 @@
+numpy==1.24.2
+pandas==1.5.3
+requests==2.32.0
+skillcorner
+skillcornerviz
+streamlit
+streamlit_image_select
+streamlit_option_menu
+gspread
+oauth2client
